@@ -1,0 +1,4 @@
+interface:
+  display_name: "Conda Experiment Workflow"
+  short_description: "Conda-first setup for reproducible ML experiments."
+  default_prompt: "Use $conda-experiment-workflow to prepare a reproducible conda environment, install dependencies, clone repos if needed, verify setup, and launch experiments."

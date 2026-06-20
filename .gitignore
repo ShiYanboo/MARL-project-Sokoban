@@ -1,0 +1,10 @@
+.venv/
+.tmp/
+README.new.md
+
+HARL/results/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

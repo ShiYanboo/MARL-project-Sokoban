@@ -40,6 +40,7 @@ class SokobanEnv(gym.Env):
         # Other Settings
         self.viewer = None
         self.max_steps = max_steps
+        self.max_reset_attempts = 100
         self.action_space = Discrete(len(ACTION_LOOKUP))
         screen_height, screen_width = (dim_room[0] * 16, dim_room[1] * 16)
         self.observation_space = Box(low=0, high=255, shape=(screen_height, screen_width, 3), dtype=np.uint8)
@@ -200,17 +201,25 @@ class SokobanEnv(gym.Env):
         return (self.max_steps == self.num_env_steps)
 
     def reset(self, second_player=False, render_mode='rgb_array'):
-        try:
-            self.room_fixed, self.room_state, self.box_mapping = generate_room(
-                dim=self.dim_room,
-                num_steps=self.num_gen_steps,
-                num_boxes=self.num_boxes,
-                second_player=second_player
-            )
-        except (RuntimeError, RuntimeWarning) as e:
-            print("[SOKOBAN] Runtime Error/Warning: {}".format(e))
-            print("[SOKOBAN] Retry . . .")
-            return self.reset(second_player=second_player, render_mode=render_mode)
+        last_error = None
+        for _ in range(self.max_reset_attempts):
+            try:
+                self.room_fixed, self.room_state, self.box_mapping = generate_room(
+                    dim=self.dim_room,
+                    num_steps=self.num_gen_steps,
+                    num_boxes=self.num_boxes,
+                    second_player=second_player
+                )
+                break
+            except (RuntimeError, RuntimeWarning) as error:
+                last_error = error
+        else:
+            raise RuntimeError(
+                "Failed to generate a valid Sokoban room after "
+                f"{self.max_reset_attempts} attempts "
+                f"(dim_room={self.dim_room}, num_boxes={self.num_boxes}, "
+                f"second_player={second_player})."
+            ) from last_error
 
         self.player_position = np.argwhere(self.room_state == 5)[0]
         self.num_env_steps = 0

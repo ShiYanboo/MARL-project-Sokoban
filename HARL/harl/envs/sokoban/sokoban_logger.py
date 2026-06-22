@@ -52,6 +52,7 @@ class SokobanLogger(BaseLogger):
             f"{prefix}player_moves": [],
             f"{prefix}noop_rate": [],
             f"{prefix}conflict_rate": [],
+            f"{prefix}invalid_action_rate": [],
             f"{prefix}success_rate": [],
             f"{prefix}final_boxes_on_target": [],
             f"{prefix}box_completion_ratio": [],
@@ -67,6 +68,7 @@ class SokobanLogger(BaseLogger):
         self.train_player_moves = np.zeros(n_threads, dtype=np.int32)
         self.train_noops = np.zeros(n_threads, dtype=np.int32)
         self.train_conflicts = np.zeros(n_threads, dtype=np.int32)
+        self.train_invalid_actions = np.zeros(n_threads, dtype=np.int32)
         self.train_agent0_exec = np.zeros(n_threads, dtype=np.int32)
         self.train_agent1_exec = np.zeros(n_threads, dtype=np.int32)
         self.train_last_boxes_on_target = np.zeros(n_threads, dtype=np.int32)
@@ -81,6 +83,7 @@ class SokobanLogger(BaseLogger):
         self.eval_player_moves = np.zeros(n_threads, dtype=np.int32)
         self.eval_noops = np.zeros(n_threads, dtype=np.int32)
         self.eval_conflicts = np.zeros(n_threads, dtype=np.int32)
+        self.eval_invalid_actions = np.zeros(n_threads, dtype=np.int32)
         self.eval_agent0_exec = np.zeros(n_threads, dtype=np.int32)
         self.eval_agent1_exec = np.zeros(n_threads, dtype=np.int32)
         self.eval_last_boxes_on_target = np.zeros(n_threads, dtype=np.int32)
@@ -102,6 +105,9 @@ class SokobanLogger(BaseLogger):
             )
             self.train_noops[thread_id] += int(info.get("noop_executed", False))
             self.train_conflicts[thread_id] += int(info.get("had_conflict", False))
+            self.train_invalid_actions[thread_id] += int(
+                info.get("invalid_action_attempt", False)
+            )
             self.train_agent0_exec[thread_id] += int(info.get("chosen_agent", -1) == 0)
             self.train_agent1_exec[thread_id] += int(info.get("chosen_agent", -1) == 1)
             self.train_last_boxes_on_target[thread_id] = int(
@@ -127,6 +133,9 @@ class SokobanLogger(BaseLogger):
             )
             self.eval_noops[thread_id] += int(info.get("noop_executed", False))
             self.eval_conflicts[thread_id] += int(info.get("had_conflict", False))
+            self.eval_invalid_actions[thread_id] += int(
+                info.get("invalid_action_attempt", False)
+            )
             self.eval_agent0_exec[thread_id] += int(info.get("chosen_agent", -1) == 0)
             self.eval_agent1_exec[thread_id] += int(info.get("chosen_agent", -1) == 1)
             self.eval_last_boxes_on_target[thread_id] = int(
@@ -144,6 +153,7 @@ class SokobanLogger(BaseLogger):
             self.train_player_moves[thread_id],
             self.train_noops[thread_id],
             self.train_conflicts[thread_id],
+            self.train_invalid_actions[thread_id],
             self.train_agent0_exec[thread_id],
             self.train_agent1_exec[thread_id],
             self.train_last_boxes_on_target[thread_id],
@@ -161,6 +171,7 @@ class SokobanLogger(BaseLogger):
             self.eval_player_moves[thread_id],
             self.eval_noops[thread_id],
             self.eval_conflicts[thread_id],
+            self.eval_invalid_actions[thread_id],
             self.eval_agent0_exec[thread_id],
             self.eval_agent1_exec[thread_id],
             self.eval_last_boxes_on_target[thread_id],
@@ -178,6 +189,7 @@ class SokobanLogger(BaseLogger):
         player_moves,
         noops,
         conflicts,
+        invalid_actions,
         agent0_exec,
         agent1_exec,
         boxes_on_target,
@@ -194,6 +206,9 @@ class SokobanLogger(BaseLogger):
         metric_store[f"sokoban/{stage}_player_moves"].append(int(player_moves))
         metric_store[f"sokoban/{stage}_noop_rate"].append(float(noops) / length)
         metric_store[f"sokoban/{stage}_conflict_rate"].append(float(conflicts) / length)
+        metric_store[f"sokoban/{stage}_invalid_action_rate"].append(
+            float(invalid_actions) / length
+        )
         metric_store[f"sokoban/{stage}_success_rate"].append(float(success))
         metric_store[f"sokoban/{stage}_final_boxes_on_target"].append(
             int(boxes_on_target)
@@ -215,6 +230,7 @@ class SokobanLogger(BaseLogger):
         self.train_player_moves[thread_id] = 0
         self.train_noops[thread_id] = 0
         self.train_conflicts[thread_id] = 0
+        self.train_invalid_actions[thread_id] = 0
         self.train_agent0_exec[thread_id] = 0
         self.train_agent1_exec[thread_id] = 0
         self.train_last_boxes_on_target[thread_id] = 0
@@ -228,6 +244,7 @@ class SokobanLogger(BaseLogger):
         self.eval_player_moves[thread_id] = 0
         self.eval_noops[thread_id] = 0
         self.eval_conflicts[thread_id] = 0
+        self.eval_invalid_actions[thread_id] = 0
         self.eval_agent0_exec[thread_id] = 0
         self.eval_agent1_exec[thread_id] = 0
         self.eval_last_boxes_on_target[thread_id] = 0

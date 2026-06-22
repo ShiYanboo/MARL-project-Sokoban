@@ -27,14 +27,22 @@ class SokobanEnv:
         self.args = copy.deepcopy(args)
         self.scenario = self.args.get("scenario", "TwoPlayer-Sokoban-v0")
         self.state_type = self.args.get("state_type", "EP")
+        self.control_mode = self.args.get("control_mode", "turn_based")
         self.conflict_resolution = self.args.get("conflict_resolution", "round_robin")
         self.max_steps = self.args.get("max_steps")
         self.reward_scale = float(self.args.get("reward_scale", 1.0))
+        if self.control_mode not in {"turn_based", "joint_resolve"}:
+            raise ValueError(
+                f"Unsupported Sokoban control_mode: {self.control_mode}. "
+                "Choose from: turn_based, joint_resolve."
+            )
 
         make_kwargs = {}
         for key in ["dim_room", "max_steps", "num_boxes", "num_gen_steps"]:
             value = self.args.get(key)
             if value is not None:
+                if key == "dim_room" and isinstance(value, int):
+                    value = (value, value)
                 make_kwargs[key] = value
 
         self.env = gym.make(self.scenario, **make_kwargs)
@@ -74,10 +82,12 @@ class SokobanEnv:
             "chosen_agent": chosen_agent,
             "env_action": env_action,
             "priority_agent_next": self._priority_agent,
+            "control_mode": self.control_mode,
             "joint_actions": discrete_actions,
             "active_agents": resolution_info["active_agents"],
             "had_conflict": resolution_info["had_conflict"],
             "noop_executed": resolution_info["noop_executed"],
+            "invalid_action_attempt": resolution_info["invalid_action_attempt"],
             "boxes_on_target": int(getattr(self.env, "boxes_on_target", 0)),
             "num_boxes": int(getattr(self.env, "num_boxes", 0)),
             "box_completion_ratio": float(
@@ -108,6 +118,16 @@ class SokobanEnv:
         return self._get_obs(), self._get_share_obs(), self.get_avail_actions()
 
     def get_avail_actions(self):
+        if self.control_mode == "turn_based":
+            avail_actions = []
+            for agent_id in range(self.n_agents):
+                agent_avail = [0] * self.action_space[agent_id].n
+                if agent_id == self._priority_agent:
+                    agent_avail = [1] * self.action_space[agent_id].n
+                else:
+                    agent_avail[0] = 1
+                avail_actions.append(agent_avail)
+            return avail_actions
         return [[1] * self.action_space[agent_id].n for agent_id in range(self.n_agents)]
 
     def render(self, mode="human"):
@@ -121,11 +141,32 @@ class SokobanEnv:
         self._rng = np.random.default_rng(seed)
 
     def _resolve_action(self, actions):
+        if self.control_mode == "turn_based":
+            chosen_agent = self._priority_agent
+            chosen_action = actions[chosen_agent]
+            invalid_action_attempt = any(
+                actions[agent_id] != 0
+                for agent_id in range(self.n_agents)
+                if agent_id != chosen_agent
+            )
+            resolution_info = {
+                "active_agents": [chosen_agent] if chosen_action != 0 else [],
+                "had_conflict": False,
+                "noop_executed": chosen_action == 0,
+                "invalid_action_attempt": invalid_action_attempt,
+            }
+            if chosen_action == 0:
+                return chosen_agent, 0, resolution_info
+            if chosen_agent == 0:
+                return chosen_agent, chosen_action, resolution_info
+            return chosen_agent, chosen_action + 8, resolution_info
+
         active_agents = [agent_id for agent_id, action in enumerate(actions) if action != 0]
         resolution_info = {
             "active_agents": active_agents,
             "had_conflict": len(active_agents) > 1,
             "noop_executed": len(active_agents) == 0,
+            "invalid_action_attempt": False,
         }
         if not active_agents:
             return -1, 0, resolution_info

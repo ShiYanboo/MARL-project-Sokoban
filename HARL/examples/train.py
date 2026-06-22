@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -53,12 +54,28 @@ def main():
         "--exp_name", type=str, default="installtest", help="Experiment name."
     )
     parser.add_argument(
+        "--run_name_prefix",
+        type=str,
+        default="",
+        help=(
+            "Optional prefix for a parameter-rich result directory name. "
+            "Use letters, numbers, dots, underscores, or hyphens."
+        ),
+    )
+    parser.add_argument(
         "--load_config",
         type=str,
         default="",
         help="If set, load existing experiment config file instead of reading from yaml config file.",
     )
     args, unparsed_args = parser.parse_known_args()
+    if args.run_name_prefix and not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9._-]*", args.run_name_prefix
+    ):
+        parser.error(
+            "--run_name_prefix must start with a letter or number and contain "
+            "only letters, numbers, dots, underscores, or hyphens."
+        )
 
     def process(arg):
         try:

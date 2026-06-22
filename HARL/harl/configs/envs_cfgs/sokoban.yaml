@@ -1,7 +1,9 @@
 scenario: TwoPlayer-Sokoban-v0
 state_type: EP
+control_mode: turn_based
 conflict_resolution: round_robin
 reward_scale: 1.0
+reset_retry_limit: 20
 max_steps: ~
 dim_room: ~
 num_boxes: ~

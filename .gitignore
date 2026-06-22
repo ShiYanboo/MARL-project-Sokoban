@@ -2,7 +2,11 @@
 .tmp/
 README.new.md
 
-HARL/results/
+# Experiment outputs generated from either the repository root or subprojects.
+**/log/
+**/logs/
+**/results/
+**/run_logs/
 
 __pycache__/
 *.pyc

@@ -62,7 +62,8 @@ class TwoPlayerSokobanEnv(SokobanEnv):
             moved_player = self._move(player_action + 1)
             moved_box = False
 
-        self.player_positions[active_player] = self.player_position
+        if active_player >= 0:
+            self.player_positions[active_player] = self.player_position
 
         self._calc_reward()
 
@@ -120,4 +121,3 @@ ACTION_LOOKUP = {
     15: 'P2: move left',
     16: 'P2: move right'
 }
-

@@ -56,7 +56,8 @@ if ! conda env list | awk '{print $1}' | grep -Fxq "$ENV_NAME"; then
   conda create -y -n "$ENV_NAME" "python=${PYTHON_VERSION}"
 fi
 
-conda run -n "$ENV_NAME" python -m pip install --upgrade pip wheel setuptools
+conda run -n "$ENV_NAME" python -m pip install --upgrade pip wheel
+conda run -n "$ENV_NAME" python -m pip install "setuptools==65.5.0"
 conda run -n "$ENV_NAME" python -m pip install \
   "torch==${TORCH_VERSION}" \
   "torchvision==${TORCHVISION_VERSION}" \
@@ -64,10 +65,14 @@ conda run -n "$ENV_NAME" python -m pip install \
   --index-url "$TORCH_INDEX_URL"
 
 conda run -n "$ENV_NAME" python -m pip install \
+  "numpy==1.26.4" \
   "gym==0.23.1" \
-  matplotlib \
-  tensorboard \
-  tensorboardX \
+  "matplotlib<3.9" \
+  "tensorboard==2.13.0" \
+  "tensorboardX==2.6.5" \
+  "protobuf<5" \
+  "setuptools==65.5.0" \
+  "six>=1.16.0" \
   setproctitle \
   absl-py \
   imageio \

@@ -31,7 +31,10 @@ This document defines the default workflow that agents should follow when the ta
 4. Upgrade packaging tools inside the target environment.
 
    ```bash
-   conda run -n harl-sokoban python -m pip install --upgrade pip wheel setuptools
+   conda run -n harl-sokoban python -m pip install --upgrade pip wheel
+   conda run -n harl-sokoban python -m pip install \
+     "setuptools==65.5.0" \
+     "numpy==1.26.4"
    ```
 
 5. Install PyTorch with an explicit CUDA channel.

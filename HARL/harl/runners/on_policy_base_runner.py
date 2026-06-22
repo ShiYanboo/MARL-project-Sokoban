@@ -54,6 +54,8 @@ class OnPolicyBaseRunner:
                 args["exp_name"],
                 algo_args["seed"]["seed"],
                 logger_path=algo_args["logger"]["log_dir"],
+                algo_args=algo_args,
+                run_name_prefix=args.get("run_name_prefix", ""),
             )
             save_config(args, algo_args, env_args, self.run_dir)
         # set the title of the process

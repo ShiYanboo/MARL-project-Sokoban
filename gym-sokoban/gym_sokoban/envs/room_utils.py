@@ -150,6 +150,8 @@ def place_boxes_and_player(room, num_boxes, second_player):
     room[player_position] = 5
 
     if second_player:
+        possible_positions = np.where(room == 1)
+        num_possible_positions = possible_positions[0].shape[0]
         ind = np.random.randint(num_possible_positions)
         player_position = possible_positions[0][ind], possible_positions[1][ind]
         room[player_position] = 5

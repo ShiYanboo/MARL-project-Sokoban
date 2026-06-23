@@ -6,6 +6,8 @@ import gym
 import numpy as np
 from gym.spaces import Box, Discrete
 
+from harl.envs.sokoban.reward_shaping import SokobanRewardShaper
+
 
 def _ensure_local_gym_sokoban():
     try:
@@ -28,13 +30,44 @@ class SokobanEnv:
         self.scenario = self.args.get("scenario", "TwoPlayer-Sokoban-v0")
         self.state_type = self.args.get("state_type", "EP")
         self.control_mode = self.args.get("control_mode", "turn_based")
+        self.observation_type = self.args.get("observation_type", "vector")
         self.conflict_resolution = self.args.get("conflict_resolution", "round_robin")
         self.max_steps = self.args.get("max_steps")
         self.reward_scale = float(self.args.get("reward_scale", 1.0))
+        self.use_reward_shaping = bool(
+            self.args.get("use_reward_shaping", False)
+        )
+        self.reward_shaper = SokobanRewardShaper(
+            distance_weight=(
+                self.args.get("distance_shaping_weight", 0.05)
+                if self.use_reward_shaping
+                else 0.0
+            ),
+            pushability_weight=(
+                self.args.get("pushability_shaping_weight", 0.02)
+                if self.use_reward_shaping
+                else 0.0
+            ),
+            deadlock_penalty=(
+                self.args.get("deadlock_penalty", 2.0)
+                if self.use_reward_shaping
+                else 0.0
+            ),
+            agent_box_distance_weight=(
+                self.args.get("agent_box_distance_shaping_weight", 0.005)
+                if self.use_reward_shaping
+                else 0.0
+            ),
+        )
         if self.control_mode not in {"turn_based", "joint_resolve"}:
             raise ValueError(
                 f"Unsupported Sokoban control_mode: {self.control_mode}. "
                 "Choose from: turn_based, joint_resolve."
+            )
+        if self.observation_type not in {"vector", "cnn"}:
+            raise ValueError(
+                f"Unsupported Sokoban observation_type: {self.observation_type}. "
+                "Choose from: vector, cnn."
             )
 
         make_kwargs = {}
@@ -54,14 +87,14 @@ class SokobanEnv:
 
         self._reset_env()
 
-        obs_dim = self._build_agent_obs(agent_id=0).shape[0]
-        state_dim = self._build_shared_state().shape[0]
+        obs_shape = self._build_agent_obs(agent_id=0).shape
+        state_shape = self._build_shared_state().shape
         self.observation_space = [
-            Box(low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32)
+            Box(low=0.0, high=1.0, shape=obs_shape, dtype=np.float32)
             for _ in range(self.n_agents)
         ]
         self.share_observation_space = [
-            Box(low=0.0, high=1.0, shape=(state_dim,), dtype=np.float32)
+            Box(low=0.0, high=1.0, shape=state_shape, dtype=np.float32)
             for _ in range(self.n_agents)
         ]
         self.action_space = [Discrete(9) for _ in range(self.n_agents)]
@@ -71,8 +104,19 @@ class SokobanEnv:
         discrete_actions = [int(np.asarray(action).item()) for action in actions]
         chosen_agent, env_action, resolution_info = self._resolve_action(discrete_actions)
 
-        _, reward, done, env_info = self.env.step(env_action)
-        reward = float(reward) * self.reward_scale
+        before_state = (
+            self.reward_shaper.snapshot(self.env)
+            if self.reward_shaper.enabled
+            else None
+        )
+        _, base_reward, done, env_info = self.env.step(env_action)
+        base_reward = float(base_reward) * self.reward_scale
+        if self.reward_shaper.enabled:
+            after_state = self.reward_shaper.snapshot(self.env)
+            shaping = self.reward_shaper.evaluate_transition(before_state, after_state)
+        else:
+            shaping = self.reward_shaper.empty_result()
+        reward = base_reward + shaping["total"]
         self._priority_agent = 1 - self._priority_agent
 
         obs = self._get_obs()
@@ -97,6 +141,16 @@ class SokobanEnv:
             "steps_used": int(getattr(self.env, "num_env_steps", 0)),
             "max_steps": int(getattr(self.env, "max_steps", 0)),
             "step_reward": reward,
+            "base_reward": base_reward,
+            "shaping_reward": shaping["total"],
+            "distance_shaping_reward": shaping["distance"],
+            "pushability_shaping_reward": shaping["pushability"],
+            "deadlock_shaping_reward": shaping["deadlock"],
+            "agent_box_distance_shaping_reward": shaping["agent_box_distance"],
+            "box_target_distance": shaping["box_target_distance_after"],
+            "pushability": shaping["pushability_after"],
+            "deadlocked_boxes": shaping["deadlocked_boxes"],
+            "agent_box_distance": shaping["agent_box_distance_after"],
             "action_moved_player": bool(env_info.get("action.moved_player", False)),
             "action_moved_box": bool(env_info.get("action.moved_box", False)),
             **env_info,
@@ -216,6 +270,23 @@ class SokobanEnv:
             self._position_map(self_pos, room_state.shape),
             self._position_map(other_pos, room_state.shape),
         ]
+        if self.observation_type == "cnn":
+            channels.extend(
+                [
+                    self._constant_map(
+                        float(self._priority_agent == agent_id), room_state.shape
+                    ),
+                    self._constant_map(
+                        float(self._priority_agent != agent_id), room_state.shape
+                    ),
+                    self._constant_map(
+                        self.env.num_env_steps / max(self.env.max_steps, 1),
+                        room_state.shape,
+                    ),
+                ]
+            )
+            return np.stack(channels, axis=0).astype(np.float32)
+
         flat = np.concatenate([channel.reshape(-1) for channel in channels], axis=0)
         extras = np.array(
             [
@@ -238,6 +309,23 @@ class SokobanEnv:
             self._position_map(self.env.player_positions[0], room_state.shape),
             self._position_map(self.env.player_positions[1], room_state.shape),
         ]
+        if self.observation_type == "cnn":
+            channels.extend(
+                [
+                    self._constant_map(
+                        float(self._priority_agent == 0), room_state.shape
+                    ),
+                    self._constant_map(
+                        float(self._priority_agent == 1), room_state.shape
+                    ),
+                    self._constant_map(
+                        self.env.num_env_steps / max(self.env.max_steps, 1),
+                        room_state.shape,
+                    ),
+                ]
+            )
+            return np.stack(channels, axis=0).astype(np.float32)
+
         flat = np.concatenate([channel.reshape(-1) for channel in channels], axis=0)
         extras = np.array(
             [
@@ -254,3 +342,7 @@ class SokobanEnv:
         arr = np.zeros(shape, dtype=np.float32)
         arr[tuple(position)] = 1.0
         return arr
+
+    @staticmethod
+    def _constant_map(value, shape):
+        return np.full(shape, value, dtype=np.float32)

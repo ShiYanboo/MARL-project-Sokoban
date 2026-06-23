@@ -188,8 +188,13 @@ def init_dir(
     """Init directory for saving results."""
     task = get_task_name(env, env_args)
     run_dir_name = build_run_dir_name(run_name_prefix, algo_args or {}, seed)
+    grouped_logger_path = (
+        os.path.join(logger_path, run_name_prefix)
+        if run_name_prefix
+        else logger_path
+    )
     results_path = os.path.join(
-        logger_path,
+        grouped_logger_path,
         env,
         task,
         algo,

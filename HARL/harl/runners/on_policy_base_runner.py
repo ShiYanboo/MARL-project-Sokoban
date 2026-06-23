@@ -279,6 +279,14 @@ class OnPolicyBaseRunner:
                 self.actor_buffer[agent_id].available_actions[0] = available_actions[
                     :, agent_id
                 ].copy()
+        if self._uses_turn_based_actor_masks():
+            initial_active_masks = self._active_masks_from_available_actions(
+                available_actions
+            )
+            for agent_id in range(self.num_agents):
+                self.actor_buffer[agent_id].active_masks[0] = initial_active_masks[
+                    :, agent_id
+                ]
         if self.state_type == "EP":
             self.critic_buffer.share_obs[0] = share_obs[:, 0].copy()
         elif self.state_type == "FP":
@@ -408,6 +416,10 @@ class OnPolicyBaseRunner:
         active_masks[dones_env == True] = np.ones(
             ((dones_env == True).sum(), self.num_agents, 1), dtype=np.float32
         )
+        if self._uses_turn_based_actor_masks():
+            active_masks = self._active_masks_from_available_actions(
+                available_actions
+            )
 
         # bad_masks use 0 to denote truncation and 1 to denote termination
         if self.state_type == "EP":
@@ -460,6 +472,22 @@ class OnPolicyBaseRunner:
             self.critic_buffer.insert(
                 share_obs, rnn_states_critic, values, rewards, masks, bad_masks
             )
+
+    def _uses_turn_based_actor_masks(self):
+        return (
+            self.args["env"] == "sokoban"
+            and self.env_args.get("control_mode", "turn_based") == "turn_based"
+        )
+
+    def _active_masks_from_available_actions(self, available_actions):
+        """Mark only the agent that can choose a non-noop action as active."""
+        available_actions = np.asarray(available_actions)
+        if available_actions.ndim != 3:
+            raise ValueError(
+                "Turn-based Sokoban requires discrete available-action masks."
+            )
+        can_act = np.any(available_actions[:, :, 1:] > 0, axis=-1)
+        return can_act.astype(np.float32)[..., None]
 
     @torch.no_grad()
     def compute(self):

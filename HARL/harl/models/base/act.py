@@ -124,9 +124,10 @@ class ACTLayer(nn.Module):
                     action_distribution.log_probs(act.unsqueeze(-1))
                 )
                 if active_masks is not None:
+                    active_count = active_masks.sum().clamp_min(1.0)
                     dist_entropy.append(
                         (action_distribution.entropy() * active_masks)
-                        / active_masks.sum()
+                        / active_count
                     )
                 else:
                     dist_entropy.append(
@@ -143,14 +144,15 @@ class ACTLayer(nn.Module):
             action_distribution = self.action_out(x, available_actions)
             action_log_probs = action_distribution.log_probs(action)
             if active_masks is not None:
+                active_count = active_masks.sum().clamp_min(1.0)
                 if self.action_type == "Discrete":
                     dist_entropy = (
                         action_distribution.entropy() * active_masks.squeeze(-1)
-                    ).sum() / active_masks.sum()
+                    ).sum() / active_count
                 else:
                     dist_entropy = (
                         action_distribution.entropy() * active_masks.squeeze(-1)
-                    ).sum() / active_masks.sum()
+                    ).sum() / active_count
             else:
                 dist_entropy = action_distribution.entropy().mean()
 

@@ -1,8 +1,14 @@
 scenario: TwoPlayer-Sokoban-v0
 state_type: EP
 control_mode: turn_based
+observation_type: vector
 conflict_resolution: round_robin
 reward_scale: 1.0
+use_reward_shaping: False
+distance_shaping_weight: 0.05
+pushability_shaping_weight: 0.02
+deadlock_penalty: 2.0
+agent_box_distance_shaping_weight: 0.005
 reset_retry_limit: 20
 max_steps: ~
 dim_room: ~

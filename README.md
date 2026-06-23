@@ -99,7 +99,7 @@ HARL 注册位置：
 
 ### 5.1 当前奖励设计
 
-当前没有额外重写奖励，仍沿用 `gym-sokoban` 原始奖励。定义位置：
+底层原始奖励保持不变，定义位置：
 
 - `gym-sokoban/gym_sokoban/envs/sokoban_env.py`
 
@@ -110,7 +110,20 @@ HARL 注册位置：
 - 箱子离开目标点：`-1`
 - 所有箱子都到目标点：`+10`
 
-HARL 封装层只做了一件事：把这个 reward 作为团队共享奖励发给两个 agent。
+HARL 封装层在原始奖励之上增加了可配置的 reward shaping，定义位置：
+
+- `HARL/harl/envs/sokoban/reward_shaping.py`
+
+推荐权重为：
+
+- 箱子到目标的墙约束 BFS 最小匹配距离差分：权重 `0.05`
+- 箱子可推动方向总数差分：权重 `0.02`
+- 非目标位置且 `pushability=0` 的死锁箱惩罚：每箱每状态 `-2`
+- 箱子到最近 agent 的可达距离和差分：权重 `0.005`
+
+默认 `use_reward_shaping=False`，所以旧脚本仍严格使用原始奖励。传入 `--use_reward_shaping True` 后，最终奖励为 `base_reward + shaping_reward`，并仍作为团队共享奖励发给两个 agent。四项分别可通过 `--distance_shaping_weight`、`--pushability_shaping_weight`、`--deadlock_penalty` 和 `--agent_box_distance_shaping_weight` 覆盖；全部设为 `0` 也可恢复原始奖励。
+
+重复推入 target 的次数感知奖励暂未加入。它依赖 episode 历史计数，而当前无 RNN actor 无法直接观察该状态，会额外引入部分可观测性。
 
 ### 5.2 当前 credit 如何分配
 
@@ -162,9 +175,9 @@ credit assignment 主要由算法本身完成。
 
 如果命令行传入 `--run_name_prefix happo-base`，最后一级目录会自动携带关键参数，例如：
 
-- `happo-base-steps10000000-len150-env0-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-YYYY-MM-DD-HH-MM-SS/`
+- `results/happo-base/<env>/<scenario>/<algo>/<exp_name>/happo-base-steps10000000-len150-env0-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-YYYY-MM-DD-HH-MM-SS/`
 
-其中 `env0` 来自 `CUDA_VISIBLE_DEVICES=0`。前缀中包含 `hasac` 时，还会追加 HASAC 的温度/熵系数字段，例如 `entrocoe0.005`；开启自动温度时写作 `entrocoeauto`。不传 `--run_name_prefix` 时仍使用原来的 `seed-时间戳` 命名。
+也就是说 prefix 同时作为 `results/` 下的分组目录，TensorBoard 可以只加载 `results/happo-base`。其中 `env0` 来自 `CUDA_VISIBLE_DEVICES=0`。前缀中包含 `hasac` 时，还会追加 HASAC 的温度/熵系数字段，例如 `entrocoe0.005`；开启自动温度时写作 `entrocoeauto`。不传 `--run_name_prefix` 时仍使用原来的路径和 `seed-时间戳` 命名。
 
 注意：结果不会覆盖到“同一个文件”上，而是会继续写到新的带时间戳目录里。所以刚跑完一轮实验却一时没看到，通常不是结果丢了，而是保存在了新的时间戳目录中。
 

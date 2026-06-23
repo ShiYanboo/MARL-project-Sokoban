@@ -48,6 +48,12 @@ class SokobanLogger(BaseLogger):
         return {
             f"{prefix}episode_length": [],
             f"{prefix}mean_step_reward": [],
+            f"{prefix}mean_base_reward": [],
+            f"{prefix}mean_shaping_reward": [],
+            f"{prefix}mean_distance_shaping_reward": [],
+            f"{prefix}mean_pushability_shaping_reward": [],
+            f"{prefix}mean_deadlock_shaping_reward": [],
+            f"{prefix}mean_agent_box_distance_shaping_reward": [],
             f"{prefix}box_pushes": [],
             f"{prefix}player_moves": [],
             f"{prefix}noop_rate": [],
@@ -64,6 +70,7 @@ class SokobanLogger(BaseLogger):
         n_threads = self.algo_args["train"]["n_rollout_threads"]
         self.train_episode_lengths = np.zeros(n_threads, dtype=np.int32)
         self.train_step_reward_sums = np.zeros(n_threads, dtype=np.float32)
+        self.train_reward_component_sums = self._empty_reward_component_sums(n_threads)
         self.train_box_pushes = np.zeros(n_threads, dtype=np.int32)
         self.train_player_moves = np.zeros(n_threads, dtype=np.int32)
         self.train_noops = np.zeros(n_threads, dtype=np.int32)
@@ -79,6 +86,7 @@ class SokobanLogger(BaseLogger):
         n_threads = self.algo_args["eval"]["n_eval_rollout_threads"]
         self.eval_episode_lengths = np.zeros(n_threads, dtype=np.int32)
         self.eval_step_reward_sums = np.zeros(n_threads, dtype=np.float32)
+        self.eval_reward_component_sums = self._empty_reward_component_sums(n_threads)
         self.eval_box_pushes = np.zeros(n_threads, dtype=np.int32)
         self.eval_player_moves = np.zeros(n_threads, dtype=np.int32)
         self.eval_noops = np.zeros(n_threads, dtype=np.int32)
@@ -99,6 +107,9 @@ class SokobanLogger(BaseLogger):
             info = info_list[0]
             self.train_episode_lengths[thread_id] += 1
             self.train_step_reward_sums[thread_id] += reward_env[thread_id]
+            self._update_reward_component_sums(
+                self.train_reward_component_sums, thread_id, info
+            )
             self.train_box_pushes[thread_id] += int(info.get("action_moved_box", False))
             self.train_player_moves[thread_id] += int(
                 info.get("action_moved_player", False)
@@ -127,6 +138,9 @@ class SokobanLogger(BaseLogger):
             info = info_list[0]
             self.eval_episode_lengths[thread_id] += 1
             self.eval_step_reward_sums[thread_id] += eval_reward_env[thread_id]
+            self._update_reward_component_sums(
+                self.eval_reward_component_sums, thread_id, info
+            )
             self.eval_box_pushes[thread_id] += int(info.get("action_moved_box", False))
             self.eval_player_moves[thread_id] += int(
                 info.get("action_moved_player", False)
@@ -149,6 +163,10 @@ class SokobanLogger(BaseLogger):
             self.train_finished_episode_stats,
             self.train_episode_lengths[thread_id],
             self.train_step_reward_sums[thread_id],
+            {
+                name: values[thread_id]
+                for name, values in self.train_reward_component_sums.items()
+            },
             self.train_box_pushes[thread_id],
             self.train_player_moves[thread_id],
             self.train_noops[thread_id],
@@ -167,6 +185,10 @@ class SokobanLogger(BaseLogger):
             self.eval_finished_episode_stats,
             self.eval_episode_lengths[thread_id],
             self.eval_step_reward_sums[thread_id],
+            {
+                name: values[thread_id]
+                for name, values in self.eval_reward_component_sums.items()
+            },
             self.eval_box_pushes[thread_id],
             self.eval_player_moves[thread_id],
             self.eval_noops[thread_id],
@@ -185,6 +207,7 @@ class SokobanLogger(BaseLogger):
         metric_store,
         episode_length,
         step_reward_sum,
+        reward_component_sums,
         box_pushes,
         player_moves,
         noops,
@@ -202,6 +225,10 @@ class SokobanLogger(BaseLogger):
         metric_store[f"sokoban/{stage}_mean_step_reward"].append(
             float(step_reward_sum) / length
         )
+        for name, value in reward_component_sums.items():
+            metric_store[f"sokoban/{stage}_mean_{name}"].append(
+                float(value) / length
+            )
         metric_store[f"sokoban/{stage}_box_pushes"].append(int(box_pushes))
         metric_store[f"sokoban/{stage}_player_moves"].append(int(player_moves))
         metric_store[f"sokoban/{stage}_noop_rate"].append(float(noops) / length)
@@ -226,6 +253,8 @@ class SokobanLogger(BaseLogger):
     def _reset_train_thread(self, thread_id):
         self.train_episode_lengths[thread_id] = 0
         self.train_step_reward_sums[thread_id] = 0.0
+        for values in self.train_reward_component_sums.values():
+            values[thread_id] = 0.0
         self.train_box_pushes[thread_id] = 0
         self.train_player_moves[thread_id] = 0
         self.train_noops[thread_id] = 0
@@ -240,6 +269,8 @@ class SokobanLogger(BaseLogger):
     def _reset_eval_thread(self, thread_id):
         self.eval_episode_lengths[thread_id] = 0
         self.eval_step_reward_sums[thread_id] = 0.0
+        for values in self.eval_reward_component_sums.values():
+            values[thread_id] = 0.0
         self.eval_box_pushes[thread_id] = 0
         self.eval_player_moves[thread_id] = 0
         self.eval_noops[thread_id] = 0
@@ -257,3 +288,21 @@ class SokobanLogger(BaseLogger):
                 self.writter.add_scalar(
                     metric_name, float(np.mean(values)), self.total_num_steps
                 )
+
+    @staticmethod
+    def _empty_reward_component_sums(n_threads):
+        return {
+            "base_reward": np.zeros(n_threads, dtype=np.float32),
+            "shaping_reward": np.zeros(n_threads, dtype=np.float32),
+            "distance_shaping_reward": np.zeros(n_threads, dtype=np.float32),
+            "pushability_shaping_reward": np.zeros(n_threads, dtype=np.float32),
+            "deadlock_shaping_reward": np.zeros(n_threads, dtype=np.float32),
+            "agent_box_distance_shaping_reward": np.zeros(
+                n_threads, dtype=np.float32
+            ),
+        }
+
+    @staticmethod
+    def _update_reward_component_sums(component_sums, thread_id, info):
+        for name, values in component_sums.items():
+            values[thread_id] += float(info.get(name, 0.0))

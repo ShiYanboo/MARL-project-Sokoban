@@ -14,8 +14,10 @@ class CNNLayer(nn.Module):
         activation_func,
         kernel_size=3,
         stride=1,
+        input_scale=255.0,
     ):
         super(CNNLayer, self).__init__()
+        self.input_scale = float(input_scale)
 
         active_func = get_active_func(activation_func)
         init_method = get_init_method(initialization_method)
@@ -60,9 +62,84 @@ class CNNLayer(nn.Module):
         self.cnn = nn.Sequential(*layers)
 
     def forward(self, x):
-        x = x / 255.0
+        if self.input_scale != 1.0:
+            x = x / self.input_scale
         x = self.cnn(x)
         return x
+
+
+class SokobanCNNLayer(nn.Module):
+    """CNN encoder for small channel-first symbolic Sokoban boards."""
+
+    def __init__(
+        self,
+        obs_shape,
+        hidden_sizes,
+        cnn_channels,
+        initialization_method,
+        activation_func,
+        input_scale=1.0,
+    ):
+        super().__init__()
+        if len(cnn_channels) != 3:
+            raise ValueError("Sokoban CNN expects exactly three cnn_channels values.")
+
+        self.input_scale = float(input_scale)
+        active_func = get_active_func(activation_func)
+        init_method = get_init_method(initialization_method)
+        gain = nn.init.calculate_gain(activation_func)
+
+        def init_(module):
+            return init(
+                module,
+                init_method,
+                lambda bias: nn.init.constant_(bias, 0),
+                gain=gain,
+            )
+
+        self.encoder = nn.Sequential(
+            init_(
+                nn.Conv2d(
+                    obs_shape[0], cnn_channels[0], kernel_size=3, padding=1
+                )
+            ),
+            active_func,
+            init_(
+                nn.Conv2d(
+                    cnn_channels[0], cnn_channels[1], kernel_size=3, padding=1
+                )
+            ),
+            active_func,
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            init_(
+                nn.Conv2d(
+                    cnn_channels[1], cnn_channels[2], kernel_size=3, padding=1
+                )
+            ),
+            active_func,
+            nn.AdaptiveAvgPool2d((2, 2)),
+            Flatten(),
+        )
+
+        layers = [
+            init_(nn.Linear(cnn_channels[2] * 4, hidden_sizes[0])),
+            active_func,
+            nn.LayerNorm(hidden_sizes[0]),
+        ]
+        for index in range(1, len(hidden_sizes)):
+            layers.extend(
+                [
+                    init_(nn.Linear(hidden_sizes[index - 1], hidden_sizes[index])),
+                    active_func,
+                    nn.LayerNorm(hidden_sizes[index]),
+                ]
+            )
+        self.projection = nn.Sequential(*layers)
+
+    def forward(self, x):
+        if self.input_scale != 1.0:
+            x = x / self.input_scale
+        return self.projection(self.encoder(x))
 
 
 class CNNBase(nn.Module):
@@ -74,13 +151,28 @@ class CNNBase(nn.Module):
         self.initialization_method = args["initialization_method"]
         self.activation_func = args["activation_func"]
         self.hidden_sizes = args["hidden_sizes"]
+        architecture = args.get("cnn_architecture", "legacy")
+        input_scale = args.get("cnn_input_scale", 255.0)
 
-        self.cnn = CNNLayer(
-            obs_shape,
-            self.hidden_sizes,
-            self.initialization_method,
-            self.activation_func,
-        )
+        if architecture == "sokoban":
+            self.cnn = SokobanCNNLayer(
+                obs_shape,
+                self.hidden_sizes,
+                args.get("cnn_channels", [32, 64, 64]),
+                self.initialization_method,
+                self.activation_func,
+                input_scale=input_scale,
+            )
+        elif architecture == "legacy":
+            self.cnn = CNNLayer(
+                obs_shape,
+                self.hidden_sizes,
+                self.initialization_method,
+                self.activation_func,
+                input_scale=input_scale,
+            )
+        else:
+            raise ValueError(f"Unsupported cnn_architecture: {architecture}")
 
     def forward(self, x):
         x = self.cnn(x)

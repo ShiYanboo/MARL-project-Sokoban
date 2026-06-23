@@ -75,6 +75,7 @@ conda run -n "$ENV_NAME" python -m pip install \
   "six>=1.16.0" \
   setproctitle \
   absl-py \
+  mpmath \
   imageio \
   requests \
   tqdm \

@@ -46,6 +46,10 @@ model:
   # network parameters
   # hidden sizes for mlp module in the network
   hidden_sizes: [128, 128]
+  # CNN settings; use cnn_architecture=sokoban for symbolic Sokoban observations
+  cnn_architecture: legacy
+  cnn_channels: [32, 64, 64]
+  cnn_input_scale: 255.0
   # activation function, choose from sigmoid, tanh, relu, leaky_relu, selu
   activation_func: relu
   # whether to use feature normalization

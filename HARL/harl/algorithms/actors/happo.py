@@ -75,10 +75,11 @@ class HAPPO(OnPolicyBase):
         )
 
         if self.use_policy_active_masks:
+            active_count = active_masks_batch.sum().clamp_min(1.0)
             policy_action_loss = (
                 -torch.sum(factor_batch * torch.min(surr1, surr2), dim=-1, keepdim=True)
                 * active_masks_batch
-            ).sum() / active_masks_batch.sum()
+            ).sum() / active_count
         else:
             policy_action_loss = -torch.sum(
                 factor_batch * torch.min(surr1, surr2), dim=-1, keepdim=True

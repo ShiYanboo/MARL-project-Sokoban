@@ -151,6 +151,8 @@ python HARL/examples/train.py \
 
 - `run2.sh`：`happo-base`，turn-based，`7x7, 2 boxes`
 - `run3.sh`：`happo-medium`，turn-based，`7x7, 3 boxes`
+- `run2_21.sh`：`happo-cnn-base`，使用随机初始化的三层 CNN encoder
+- `run5.sh`：`happo-cnn-shaped`，通过 `--use_reward_shaping True` 在 CNN baseline 上增加 BFS 距离、pushability、死锁和 agent-box 距离 shaping；其他旧脚本仍使用原始奖励
 
 ### 3. 命令行改参数
 
@@ -174,15 +176,17 @@ python HARL/examples/train.py \
 - `--max_steps`
 - `--dim_room`
 - `--num_boxes`
+- `--num_gen_steps`
 
-`--exp_name` 仍决定上层实验目录；`--run_name_prefix` 决定最后一级可读目录名。设置后会自动加入训练步数、episode length、CUDA 设备、actor/critic 学习率、PPO epoch、clip、评估局数、seed 和时间戳。例如：
+`--exp_name` 决定实验目录；`--run_name_prefix` 同时决定 `results/` 下的分组目录和最后一级可读目录名。设置后会自动加入训练步数、episode length、CUDA 设备、actor/critic 学习率、PPO epoch、clip、评估局数、seed 和时间戳。例如：
 
 ```text
-happo-ablation-lr-steps1000000-len150-env0-lr1e-4-vlr1e-4-ppoepoch5-clip0.1-evalepi20-seed1-YYYY-MM-DD-HH-MM-SS
+results/happo-ablation-lr/.../happo-ablation-lr-steps1000000-len150-env0-lr1e-4-vlr1e-4-ppoepoch5-clip0.1-evalepi20-seed1-YYYY-MM-DD-HH-MM-SS
 ```
 
 若前缀包含 `hasac`，目录名还会加入 `entrocoe<alpha>`；`auto_alpha=True` 时写作 `entrocoeauto`。不传该参数时保持旧的 `seed-xxxxx-时间戳` 命名。
-- `--num_gen_steps`
+
+CNN 版本使用 `9 x H x W` 的语义输入通道：墙、目标、箱子到位、普通箱子、自己位置、队友位置、自己是否 active、队友是否 active、episode 进度。它不是自然图像，因此不加载 ImageNet 预训练模型，而是用 `Conv(32)-Conv(64)-Pool-Conv(64)` 从头训练。turn-based 模式下 inactive agent 只能输出 noop，并在 actor buffer 中设置 `active_mask=0`；因此它不参与该步 policy loss。critic 仍使用 centralized state 和 shared team reward。
 
 训练相关常改项：
 

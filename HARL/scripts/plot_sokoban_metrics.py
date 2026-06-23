@@ -38,6 +38,20 @@ DEFAULT_GROUPS = {
         ("sokoban/train_noop_rate", "train noop rate"),
         ("sokoban/eval_noop_rate", "eval noop rate"),
     ],
+    "shaping_curves.png": [
+        ("sokoban/train_mean_base_reward", "train base reward / step"),
+        ("sokoban/train_mean_shaping_reward", "train shaping reward / step"),
+        ("sokoban/train_mean_distance_shaping_reward", "train distance shaping / step"),
+        ("sokoban/train_mean_pushability_shaping_reward", "train pushability shaping / step"),
+        ("sokoban/train_mean_deadlock_shaping_reward", "train deadlock shaping / step"),
+        (
+            "sokoban/train_mean_agent_box_distance_shaping_reward",
+            "train agent-box shaping / step",
+        ),
+        ("sokoban/eval_mean_base_reward", "eval base reward / step"),
+        ("sokoban/eval_mean_shaping_reward", "eval shaping reward / step"),
+        ("sokoban/eval_mean_deadlock_shaping_reward", "eval deadlock shaping / step"),
+    ],
 }
 
 
@@ -68,6 +82,68 @@ def load_summary(summary_path):
         if points:
             summary[key] = points
     return summary
+
+
+def metric_key_from_event_path(event_path, log_dir):
+    try:
+        relative_parent = event_path.parent.relative_to(log_dir)
+    except ValueError:
+        return None
+    if str(relative_parent) == ".":
+        return None
+    return normalize_metric_key(str(relative_parent))
+
+
+def load_event_files(log_dir):
+    try:
+        from tensorboard.backend.event_processing import event_accumulator
+    except ImportError as exc:
+        raise ImportError(
+            "summary.json was not found and tensorboard is not installed, "
+            "so event files cannot be read."
+        ) from exc
+
+    summary = {}
+    for event_path in sorted(log_dir.rglob("events.out.tfevents*")):
+        accumulator = event_accumulator.EventAccumulator(str(event_path))
+        accumulator.Reload()
+        path_key = metric_key_from_event_path(event_path, log_dir)
+        for tag in accumulator.Tags().get("scalars", []):
+            metric_key = path_key or normalize_metric_key(tag)
+            points = [
+                (int(event.step), float(event.value))
+                for event in accumulator.Scalars(tag)
+            ]
+            if points:
+                summary.setdefault(metric_key, []).extend(points)
+
+    for metric_key, points in summary.items():
+        deduped = {}
+        for step, value in points:
+            deduped[step] = value
+        summary[metric_key] = sorted(deduped.items())
+    return summary
+
+
+def load_metrics(run_dir):
+    summary_path = run_dir / "logs" / "summary.json"
+    log_dir = run_dir / "logs"
+    summary = {}
+    sources = []
+    if summary_path.exists():
+        summary.update(load_summary(summary_path))
+        sources.append(summary_path)
+    if log_dir.exists():
+        event_summary = load_event_files(log_dir)
+        for key, points in event_summary.items():
+            summary.setdefault(key, points)
+        if event_summary:
+            sources.append(log_dir)
+    if not summary:
+        raise FileNotFoundError(
+            f"Could not find summary.json or scalar event files under: {log_dir}"
+        )
+    return summary, " + ".join(str(source) for source in sources)
 
 
 def smooth(values, window):
@@ -145,14 +221,10 @@ def main():
     args = parser.parse_args()
 
     run_dir = args.run_dir.resolve()
-    summary_path = run_dir / "logs" / "summary.json"
-    if not summary_path.exists():
-        raise FileNotFoundError(f"Could not find summary file: {summary_path}")
-
     output_dir = args.output_dir.resolve() if args.output_dir else run_dir / "plots"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    summary = load_summary(summary_path)
+    summary, source_path = load_metrics(run_dir)
     write_metric_index(summary, output_dir / "metric_index.md")
 
     generated = []
@@ -161,8 +233,9 @@ def main():
             generated.append(filename)
 
     if not generated:
-        raise RuntimeError("No matching metrics were found in summary.json.")
+        raise RuntimeError(f"No matching metrics were found in {source_path}.")
 
+    print(f"Loaded metrics from: {source_path}")
     print(f"Saved plots to: {output_dir}")
     for filename in generated:
         print(f"  - {output_dir / filename}")

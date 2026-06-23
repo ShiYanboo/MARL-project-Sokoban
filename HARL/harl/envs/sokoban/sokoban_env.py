@@ -53,6 +53,7 @@ class SokobanEnv:
                 if self.use_reward_shaping
                 else 0.0
             ),
+            deadlock_penalty_mode=self.args.get("deadlock_penalty_mode", "state"),
             agent_box_distance_weight=(
                 self.args.get("agent_box_distance_shaping_weight", 0.005)
                 if self.use_reward_shaping
@@ -154,6 +155,7 @@ class SokobanEnv:
             "box_target_distance": shaping["box_target_distance_after"],
             "pushability": shaping["pushability_after"],
             "deadlocked_boxes": shaping["deadlocked_boxes"],
+            "deadlock_penalty_count": shaping["deadlock_penalty_count"],
             "agent_box_distance": shaping["agent_box_distance_after"],
             "action_moved_player": bool(env_info.get("action.moved_player", False)),
             "action_moved_box": bool(env_info.get("action.moved_box", False)),

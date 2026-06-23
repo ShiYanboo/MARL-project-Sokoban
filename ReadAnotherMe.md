@@ -147,12 +147,20 @@ python HARL/examples/train.py \
 --max_steps 100 --dim_room 7 --num_boxes 1
 ```
 
-仓库根目录还提供了两个现成脚本：
+仓库根目录还提供了一组现成脚本：
 
 - `run2.sh`：`happo-base`，turn-based，`7x7, 2 boxes`
 - `run3.sh`：`happo-medium`，turn-based，`7x7, 3 boxes`
 - `run2_21.sh`：`happo-cnn-base`，使用随机初始化的三层 CNN encoder
 - `run5.sh`：`happo-cnn-shaped`，通过 `--use_reward_shaping True` 在 CNN baseline 上增加 BFS 距离、pushability、死锁和 agent-box 距离 shaping，并通过 `--reward_finished 20` 提高整局完成奖励；其他旧脚本仍使用原始的 `+10`
+- `run6.sh`：`happo-shaped`，回到 MLP `[512,512]`，并使用 `deadlock_penalty_mode increase` 避免同一死锁状态每步重复重罚
+- `run6_0.sh`：`happo-shaped-strongpot`，在 `run6.sh` 基础上把正向势函数放大到 `distance_shaping_weight=0.20`、`agent_box_distance_shaping_weight=0.10`
+- `run6.1.sh`：去掉 deadlock，保留较大的 box-target 和 agent-box 正向势函数
+- `run6.2.sh`：去掉 deadlock 和 pushability，保留较大的 box-target 和 agent-box 正向势函数
+- `run6.3.sh`：去掉 deadlock、pushability 和 box-target，只保留较大的 agent-box 势函数
+- `run6.4.sh`：全部 shaping 关闭，保留 `reward_finished 20`，作为无 shaping 对照
+
+当前建议优先比较 `run6_0.sh`、`run6.1.sh`、`run6.2.sh` 和 `run6.4.sh`。如果 `run6_0.sh` 比无 shaping 明显更快脱离随机区间，说明正向势函数有帮助；如果 `run6.1/run6.2` 明显更稳，说明 deadlock 或 pushability 的负向项仍偏强。
 
 ### 3. 命令行改参数
 
@@ -248,8 +256,10 @@ python -m pip install --upgrade --force-reinstall \
 
 ```bash
 cd /path/to/MARL-project-sokoban
-python HARL/scripts/plot_sokoban_metrics.py --run-dir results/sokoban/TwoPlayer-Sokoban-v0/happo/server_happo/seed-xxxxx-YYYY-MM-DD-HH-MM-SS
+python HARL/scripts/plot_sokoban_metrics.py --run-dir results/happo-shaped/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped/<run-dir>
 ```
+
+`plot_sokoban_metrics.py` 会优先读取 `logs/summary.json`；如果该文件不存在，也会递归读取 `logs/**/events.out.tfevents*`，所以不依赖 TensorBoard UI 也能生成 `reward_curves.png`、`optimization_curves.png`、`sokoban_curves.png` 和 `shaping_curves.png`。
 
 ### 5. 结果在哪里看
 
@@ -269,7 +279,7 @@ results/<env>/<scenario>/<algo>/<exp_name>/<parameter-rich-name-or-seed-timestam
 
 - `config.json`：本次实验最终参数
 - `progress.txt`：训练进度
-- `logs/summary.json`：主要日志
+- `logs/summary.json` 或 `logs/**/events.out.tfevents*`：主要日志
 - `models/`：模型权重
 - `plots/`：训练后手动画图生成的图片
 

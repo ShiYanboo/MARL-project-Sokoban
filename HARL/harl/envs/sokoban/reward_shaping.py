@@ -22,12 +22,18 @@ class SokobanRewardShaper:
         distance_weight=0.05,
         pushability_weight=0.02,
         deadlock_penalty=2.0,
+        deadlock_penalty_mode="state",
         agent_box_distance_weight=0.005,
     ):
         self.distance_weight = float(distance_weight)
         self.pushability_weight = float(pushability_weight)
         self.deadlock_penalty = float(deadlock_penalty)
+        self.deadlock_penalty_mode = deadlock_penalty_mode
         self.agent_box_distance_weight = float(agent_box_distance_weight)
+        if self.deadlock_penalty_mode not in {"state", "increase"}:
+            raise ValueError(
+                "deadlock_penalty_mode must be either 'state' or 'increase'."
+            )
 
     @property
     def enabled(self):
@@ -54,7 +60,15 @@ class SokobanRewardShaper:
             after_metrics["pushability"] - before_metrics["pushability"]
         )
         pushability_reward = self.pushability_weight * min(0, pushability_change)
-        deadlock_reward = -self.deadlock_penalty * after_metrics["deadlocked_boxes"]
+        if self.deadlock_penalty_mode == "increase":
+            deadlock_count = max(
+                0,
+                after_metrics["deadlocked_boxes"]
+                - before_metrics["deadlocked_boxes"],
+            )
+        else:
+            deadlock_count = after_metrics["deadlocked_boxes"]
+        deadlock_reward = -self.deadlock_penalty * deadlock_count
         agent_box_distance_reward = self.agent_box_distance_weight * (
             before_metrics["agent_box_distance"]
             - after_metrics["agent_box_distance"]
@@ -80,6 +94,7 @@ class SokobanRewardShaper:
             "pushability_before": int(before_metrics["pushability"]),
             "pushability_after": int(after_metrics["pushability"]),
             "deadlocked_boxes": int(after_metrics["deadlocked_boxes"]),
+            "deadlock_penalty_count": int(deadlock_count),
             "agent_box_distance_before": float(
                 before_metrics["agent_box_distance"]
             ),
@@ -101,6 +116,7 @@ class SokobanRewardShaper:
             "pushability_before": 0,
             "pushability_after": 0,
             "deadlocked_boxes": 0,
+            "deadlock_penalty_count": 0,
             "agent_box_distance_before": 0.0,
             "agent_box_distance_after": 0.0,
         }

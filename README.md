@@ -8,9 +8,9 @@
 - 已搭好 `HAPPO` 和 `HASAC` 两套训练框架
 - 已补好本机验证脚本与 Linux `conda` 安装脚本
 - 已完成最小可运行验证，确认训练、评估、保存模型的链路打通
-- 已补充结果可视化脚本，可直接把 `summary.json` 画成曲线图
+- 已补充结果可视化脚本，可从 `summary.json` 或 TensorBoard event 文件直接画曲线图
 
-当前重点不是“已经训出很强的策略”，而是“实验框架已经可复现、可扩展、可继续做大规模实验”。
+当前重点不是“已经训出很强的策略”，而是“实验框架已经可复现、可扩展、可继续做大规模实验”。目前主线实验已经回到 HAPPO + MLP，CNN 版本保留为对照。
 
 ---
 
@@ -33,6 +33,8 @@
 
 - `HARL/harl/envs/sokoban/sokoban_env.py`
   HARL 侧的 Sokoban 环境封装，负责 observation/action/reward/info 的转换
+- `HARL/harl/envs/sokoban/reward_shaping.py`
+  Sokoban reward shaping 工具，负责 BFS 距离、pushability、deadlock 和 agent-box 距离等辅助奖励
 - `HARL/harl/envs/sokoban/sokoban_logger.py`
   Sokoban 的 on-policy 日志器，负责额外记录成功率、回合制执行统计、推箱次数等指标
 - `HARL/harl/configs/envs_cfgs/sokoban.yaml`
@@ -114,16 +116,18 @@ HARL 封装层在原始奖励之上增加了可配置的 reward shaping，定义
 
 - `HARL/harl/envs/sokoban/reward_shaping.py`
 
-推荐权重为：
+早期默认权重较小，当前更推荐把正向势函数信号略微放大。`run6_0.sh` 和后续 `run6.*.sh` 系列使用的当前主线权重为：
 
-- 箱子到目标的墙约束 BFS 最小匹配距离差分：权重 `0.05`
-- 箱子可推动方向总数差分：权重 `0.02`
-- 非目标位置且 `pushability=0` 的死锁箱惩罚：每箱每状态 `-2`
-- 箱子到最近 agent 的可达距离和差分：权重 `0.005`
+- 箱子到目标的墙约束 BFS 最小匹配距离差分：权重 `0.20`
+- 箱子可推动方向总数差分：权重 `0.05`
+- 非目标位置且 `pushability=0` 的死锁箱惩罚：`0.8`
+- 箱子到最近 agent 的可达距离和差分：权重 `0.10`
 
 默认 `use_reward_shaping=False`，所以旧脚本仍严格使用原始奖励。传入 `--use_reward_shaping True` 后，最终奖励为 `base_reward + shaping_reward`，并仍作为团队共享奖励发给两个 agent。四项分别可通过 `--distance_shaping_weight`、`--pushability_shaping_weight`、`--deadlock_penalty` 和 `--agent_box_distance_shaping_weight` 覆盖；全部设为 `0` 也可恢复原始奖励。
 
-`run5.sh` 使用 `--reward_finished 20`，只提高完成整局时的终局奖励；其他脚本未指定该参数时仍为 `+10`。
+`run5.sh` 及当前 `run6*` 系列使用 `--reward_finished 20`，只提高完成整局时的终局奖励；其他旧脚本未指定该参数时仍为 `+10`。
+
+`--deadlock_penalty_mode state` 会对每个死锁状态每步惩罚；`increase` 只在死锁箱数量增加时惩罚一次，通常更适合训练早期探索。当前主线脚本使用 `increase`，避免同一死锁状态被每步重复重罚到 `-100` 量级。
 
 重复推入 target 的次数感知奖励暂未加入。它依赖 episode 历史计数，而当前无 RNN actor 无法直接观察该状态，会额外引入部分可观测性。
 
@@ -209,7 +213,7 @@ credit assignment 主要由算法本身完成。
 用法示例：
 
 ```powershell
-python HARL\scripts\plot_sokoban_metrics.py --run-dir results\sokoban\TwoPlayer-Sokoban-v0\happo\trial_happo\seed-00001-2026-06-20-17-35-26
+python HARL/scripts/plot_sokoban_metrics.py --run-dir results/happo-shaped/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped/<run-dir>
 ```
 
 会在该实验目录下生成：
@@ -217,12 +221,10 @@ python HARL\scripts\plot_sokoban_metrics.py --run-dir results\sokoban\TwoPlayer-
 - `plots/reward_curves.png`
 - `plots/optimization_curves.png`
 - `plots/sokoban_curves.png`（当日志里存在这些指标时）
+- `plots/shaping_curves.png`（当日志里存在 shaping 指标时）
 - `plots/metric_index.md`
 
-当前我已经为这次 HAPPO 样例运行生成了图：
-
-- `results/sokoban/TwoPlayer-Sokoban-v0/happo/trial_happo/seed-00001-2026-06-20-17-35-26/plots/reward_curves.png`
-- `results/sokoban/TwoPlayer-Sokoban-v0/happo/trial_happo/seed-00001-2026-06-20-17-35-26/plots/optimization_curves.png`
+该脚本优先读取 `logs/summary.json`；如果该文件不存在，也会递归读取 `logs/**/events.out.tfevents*`，因此不依赖 TensorBoard UI 也能画出大部分曲线。
 
 #### 方式 B：TensorBoard
 
@@ -274,6 +276,12 @@ Sokoban 额外值得监测：
 - `sokoban/train_conflict_rate`
 - `sokoban/train_invalid_action_rate`
 - `sokoban/train_noop_rate`
+- `sokoban/train_mean_base_reward`
+- `sokoban/train_mean_shaping_reward`
+- `sokoban/train_mean_distance_shaping_reward`
+- `sokoban/train_mean_pushability_shaping_reward`
+- `sokoban/train_mean_deadlock_shaping_reward`
+- `sokoban/train_mean_agent_box_distance_shaping_reward`
 
 说明：
 
@@ -281,6 +289,7 @@ Sokoban 额外值得监测：
 - 如果 `invalid_action_rate` 升高，说明非激活 agent 仍频繁尝试输出非 `noop`
 - 这些 Sokoban 专属指标目前主要在 HAPPO 这条 on-policy 日志链路里会更完整
 - HASAC 目前已经有回报、评估长度、平均 step reward 等基础曲线
+- `shaping_reward` 如果长期绝对值远大于 `base_reward`，说明辅助奖励开始主导任务，需重新缩放权重
 
 ---
 

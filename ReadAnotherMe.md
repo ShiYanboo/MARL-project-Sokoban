@@ -152,7 +152,7 @@ python HARL/examples/train.py \
 - `run2.sh`：`happo-base`，turn-based，`7x7, 2 boxes`
 - `run3.sh`：`happo-medium`，turn-based，`7x7, 3 boxes`
 - `run2_21.sh`：`happo-cnn-base`，使用随机初始化的三层 CNN encoder
-- `run5.sh`：`happo-cnn-shaped`，通过 `--use_reward_shaping True` 在 CNN baseline 上增加 BFS 距离、pushability、死锁和 agent-box 距离 shaping；其他旧脚本仍使用原始奖励
+- `run5.sh`：`happo-cnn-shaped`，通过 `--use_reward_shaping True` 在 CNN baseline 上增加 BFS 距离、pushability、死锁和 agent-box 距离 shaping，并通过 `--reward_finished 20` 提高整局完成奖励；其他旧脚本仍使用原始的 `+10`
 
 ### 3. 命令行改参数
 

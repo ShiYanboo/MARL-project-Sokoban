@@ -4,6 +4,7 @@ control_mode: turn_based
 observation_type: vector
 conflict_resolution: round_robin
 reward_scale: 1.0
+reward_finished: ~
 use_reward_shaping: False
 distance_shaping_weight: 0.05
 pushability_shaping_weight: 0.02

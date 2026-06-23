@@ -22,6 +22,7 @@ CUDA_VISIBLE_DEVICES=0 PYTHONUNBUFFERED=1 python -u HARL/examples/train.py \
   --max_steps 150 \
   --dim_room 7 \
   --num_boxes 2 \
+  --reward_finished 20 \
   --lr 1e-4 \
   --critic_lr 3e-4 \
   --entropy_coef 0.01 \
@@ -34,7 +35,7 @@ CUDA_VISIBLE_DEVICES=0 PYTHONUNBUFFERED=1 python -u HARL/examples/train.py \
   --use_reward_shaping True \
   --distance_shaping_weight 0.05 \
   --pushability_shaping_weight 0.02 \
-  --deadlock_penalty 2.0 \
+  --deadlock_penalty 0.75 \
   --agent_box_distance_shaping_weight 0.005 \
   --log_interval 5 \
   --eval_interval 25 \

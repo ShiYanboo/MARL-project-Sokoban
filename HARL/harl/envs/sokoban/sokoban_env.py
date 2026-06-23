@@ -79,6 +79,10 @@ class SokobanEnv:
                 make_kwargs[key] = value
 
         self.env = gym.make(self.scenario, **make_kwargs)
+        if self.args.get("reward_finished") is not None:
+            self.env.unwrapped.reward_finished = float(
+                self.args["reward_finished"]
+            )
         self.n_agents = 2
         self._seed = 0
         self._priority_agent = 0

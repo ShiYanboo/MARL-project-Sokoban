@@ -108,7 +108,7 @@ HARL 注册位置：
 - 每步惩罚：`-0.1`
 - 箱子被推到目标点：`+1`
 - 箱子离开目标点：`-1`
-- 所有箱子都到目标点：`+10`
+- 所有箱子都到目标点：默认 `+10`，可通过 `--reward_finished` 覆盖
 
 HARL 封装层在原始奖励之上增加了可配置的 reward shaping，定义位置：
 
@@ -122,6 +122,8 @@ HARL 封装层在原始奖励之上增加了可配置的 reward shaping，定义
 - 箱子到最近 agent 的可达距离和差分：权重 `0.005`
 
 默认 `use_reward_shaping=False`，所以旧脚本仍严格使用原始奖励。传入 `--use_reward_shaping True` 后，最终奖励为 `base_reward + shaping_reward`，并仍作为团队共享奖励发给两个 agent。四项分别可通过 `--distance_shaping_weight`、`--pushability_shaping_weight`、`--deadlock_penalty` 和 `--agent_box_distance_shaping_weight` 覆盖；全部设为 `0` 也可恢复原始奖励。
+
+`run5.sh` 使用 `--reward_finished 20`，只提高完成整局时的终局奖励；其他脚本未指定该参数时仍为 `+10`。
 
 重复推入 target 的次数感知奖励暂未加入。它依赖 episode 历史计数，而当前无 RNN actor 无法直接观察该状态，会额外引入部分可观测性。
 

@@ -162,6 +162,63 @@ python HARL/examples/train.py \
 
 当前建议优先比较 `run6_0.sh`、`run6.1.sh`、`run6.2.sh` 和 `run6.4.sh`。如果 `run6_0.sh` 比无 shaping 明显更快脱离随机区间，说明正向势函数有帮助；如果 `run6.1/run6.2` 明显更稳，说明 deadlock 或 pushability 的负向项仍偏强。
 
+### 2.1 reward shaping v2：有效推箱距离
+
+原来的 `distance_shaping_weight` 使用箱子到目标的普通 BFS 地面距离。这个信号虽然平滑，但没有考虑 Sokoban 的核心约束：箱子只能被推，不能自己走过去；箱子前进方向的前后两格都需要可用，玩家还需要能站到箱子身后。因此普通 BFS 会奖励一些几何上靠近目标、但实际上无法沿该方向推动的状态。
+
+当前 v2 把箱子-目标距离改成了静态 reverse-push distance table。对每个目标预计算一张表：
+
+```text
+target_push_dist[target_id][r][c]
+= 如果箱子在 (r, c)，静态地图上最少推多少次能到 target_id。
+```
+
+预计算伪代码如下：
+
+```python
+for target in targets:
+    dist = full_grid(INF)
+    dist[target] = 0
+    queue = deque([target])
+
+    while queue:
+        cur = queue.popleft()
+        for d in directions:
+            # 正向推箱是 prev -> cur
+            prev = cur - d
+            player_stand = prev - d
+
+            if inside(prev) and inside(player_stand):
+                if not wall(prev) and not wall(player_stand):
+                    if dist[prev] > dist[cur] + 1:
+                        dist[prev] = dist[cur] + 1
+                        queue.append(prev)
+```
+
+这样得到的是“有效 push 步数”而不是地面距离。多箱子多目标时不会贪心选择最近目标，而是对每个箱子、每个目标查表组成 cost matrix，再继续使用最小匹配 DP。复杂度为：
+
+- 距离表预计算：`O(T * H * W)`，`T` 是目标数量。
+- 每步构造 cost：`O(B * T)`，`B` 是箱子数量。
+- matching DP：`O(B * T * 2^T)`；当前 Sokoban 箱子数量较少，这部分开销可接受。
+
+需要注意的是，这张表只使用静态墙和目标，不把其他箱子当成长程障碍。这样做是有意的：它让 reward 保持平滑，不会因为另一个箱子暂时挡路就把距离突然变成不可达。但它仍然只是启发式 shaping，不是完整 Sokoban solver。
+
+玩家-箱子距离也同步改成了“玩家到有效站位距离”。对当前每个箱子和每个方向，代码会临时检查一次真实局面下是否可推：`front` 和 `rear` 在地图内且不是墙，`front` 没有箱子或玩家，`rear` 没有箱子，并且至少一个玩家能走到 `rear`。如果把箱子推到 `front` 后，全局有效匹配距离下降，则 `rear` 被认为是有效站位。`agent_box_distance_shaping_weight` 现在奖励玩家靠近这些有效站位，而不是靠近箱子任意相邻格。
+
+此外新增了一个默认关闭的有效推动作奖励：
+
+```bash
+--useful_push_shaping_weight 0.0
+```
+
+当一步 transition 恰好移动了一个箱子，并且全局有效箱子-目标距离下降时，`useful_push_applied=1`。实际奖励为：
+
+```text
+useful_push_shaping_weight * useful_push_applied
+```
+
+默认权重是 0，因此所有旧脚本数值行为保持兼容；但在开启 reward shaping 时，日志里会额外记录 `useful_push_shaping_reward`、`useful_push_applied` 和 `useful_push_distance_delta`，方便后续分析 agent 是否真的学会了“朝有效方向推箱子”。
+
 ### 3. 命令行改参数
 
 HARL 支持直接在训练命令后覆盖 yaml 默认值。比如：

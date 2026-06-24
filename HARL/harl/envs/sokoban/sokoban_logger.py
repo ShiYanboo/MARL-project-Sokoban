@@ -54,6 +54,7 @@ class SokobanLogger(BaseLogger):
             f"{prefix}mean_pushability_shaping_reward": [],
             f"{prefix}mean_deadlock_shaping_reward": [],
             f"{prefix}mean_agent_box_distance_shaping_reward": [],
+            f"{prefix}mean_useful_push_shaping_reward": [],
             f"{prefix}box_pushes": [],
             f"{prefix}player_moves": [],
             f"{prefix}noop_rate": [],
@@ -300,6 +301,7 @@ class SokobanLogger(BaseLogger):
             "agent_box_distance_shaping_reward": np.zeros(
                 n_threads, dtype=np.float32
             ),
+            "useful_push_shaping_reward": np.zeros(n_threads, dtype=np.float32),
         }
 
     @staticmethod

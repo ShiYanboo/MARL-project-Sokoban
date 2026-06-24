@@ -59,6 +59,11 @@ class SokobanEnv:
                 if self.use_reward_shaping
                 else 0.0
             ),
+            useful_push_weight=(
+                self.args.get("useful_push_shaping_weight", 0.0)
+                if self.use_reward_shaping
+                else 0.0
+            ),
         )
         if self.control_mode not in {"turn_based", "joint_resolve"}:
             raise ValueError(
@@ -152,11 +157,14 @@ class SokobanEnv:
             "pushability_shaping_reward": shaping["pushability"],
             "deadlock_shaping_reward": shaping["deadlock"],
             "agent_box_distance_shaping_reward": shaping["agent_box_distance"],
+            "useful_push_shaping_reward": shaping["useful_push"],
             "box_target_distance": shaping["box_target_distance_after"],
             "pushability": shaping["pushability_after"],
             "deadlocked_boxes": shaping["deadlocked_boxes"],
             "deadlock_penalty_count": shaping["deadlock_penalty_count"],
             "agent_box_distance": shaping["agent_box_distance_after"],
+            "useful_push_applied": shaping["useful_push_applied"],
+            "useful_push_distance_delta": shaping["useful_push_distance_delta"],
             "action_moved_player": bool(env_info.get("action.moved_player", False)),
             "action_moved_box": bool(env_info.get("action.moved_box", False)),
             **env_info,

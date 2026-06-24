@@ -11,6 +11,7 @@ pushability_shaping_weight: 0.02
 deadlock_penalty: 2.0
 deadlock_penalty_mode: state
 agent_box_distance_shaping_weight: 0.005
+useful_push_shaping_weight: 0.0
 reset_retry_limit: 20
 max_steps: ~
 dim_room: ~

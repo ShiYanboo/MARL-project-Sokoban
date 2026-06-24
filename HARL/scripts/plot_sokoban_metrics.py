@@ -48,9 +48,17 @@ DEFAULT_GROUPS = {
             "sokoban/train_mean_agent_box_distance_shaping_reward",
             "train agent-box shaping / step",
         ),
+        (
+            "sokoban/train_mean_useful_push_shaping_reward",
+            "train useful push shaping / step",
+        ),
         ("sokoban/eval_mean_base_reward", "eval base reward / step"),
         ("sokoban/eval_mean_shaping_reward", "eval shaping reward / step"),
         ("sokoban/eval_mean_deadlock_shaping_reward", "eval deadlock shaping / step"),
+        (
+            "sokoban/eval_mean_useful_push_shaping_reward",
+            "eval useful push shaping / step",
+        ),
     ],
 }
 

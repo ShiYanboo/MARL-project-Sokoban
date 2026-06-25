@@ -162,6 +162,40 @@ python HARL/examples/train.py \
 
 当前建议优先比较 `run6_0.sh`、`run6.1.sh`、`run6.2.sh` 和 `run6.4.sh`。如果 `run6_0.sh` 比无 shaping 明显更快脱离随机区间，说明正向势函数有帮助；如果 `run6.1/run6.2` 明显更稳，说明 deadlock 或 pushability 的负向项仍偏强。
 
+后续大量续训脚本已经按系列放入子目录：
+
+- `run8/`：朴素 BFS shaping 已筛选方案的继续训练与 v0/v1/v2 混合训练
+- `run9/`：GRU/RNN + 动作历史 observation 的实验
+
+`run8/` 的设计是“每个被筛出来还不错的奖励方案，各自完整跑自己的流水线”，而不是所有方案混在同一个 prefix 下：
+
+- `run8/run_general8.1.sh`：`strongpot`，先从 `happo-shaped-strongpot-resume5m` 继续两轮，每轮 `5e6` steps，再做 v0/v1/v2 的 1:1:1 混合训练四轮
+- `run8/run_general8.2.sh`：`nodeadlock`，同样两轮继续训练 + 四轮混合训练
+- `run8/run_general8.3.sh`：`nodl-nopush`，同样两轮继续训练 + 四轮混合训练
+- `run8/run_general8.4.sh`：`noshape`，无 shaping baseline，同样两轮继续训练 + 四轮混合训练
+- `run8/run_general8.5.sh`：依次跑上面四套完整流水线
+
+所有 `run8/` 脚本默认使用 GPU5，并且显式传入旧 BFS 兼容模式：
+
+```bash
+--box_target_distance_mode bfs
+--agent_box_distance_mode adjacent
+```
+
+因此它们继续训练早期朴素 BFS 模型时，不会悄悄切换到 v2 的 reverse-push/useful-position reward 定义。
+
+`run9/` 的 GRU 脚本不从旧 MLP 模型 resume，因为 `--use_recurrent_policy True` 和 `--action_history_len 8` 都会改变网络结构或输入维度，严格加载旧 checkpoint 会 shape mismatch。可先跑：
+
+```bash
+bash run9/run9.1_smoke.sh
+```
+
+确认链路没问题后，再跑：
+
+```bash
+bash run9/run_general9.1.sh
+```
+
 ### 2.1 reward shaping v2：有效推箱距离
 
 原来的 `distance_shaping_weight` 使用箱子到目标的普通 BFS 地面距离。这个信号虽然平滑，但没有考虑 Sokoban 的核心约束：箱子只能被推，不能自己走过去；箱子前进方向的前后两格都需要可用，玩家还需要能站到箱子身后。因此普通 BFS 会奖励一些几何上靠近目标、但实际上无法沿该方向推动的状态。
@@ -218,6 +252,60 @@ useful_push_shaping_weight * useful_push_applied
 ```
 
 默认权重是 0，因此所有旧脚本数值行为保持兼容；但在开启 reward shaping 时，日志里会额外记录 `useful_push_shaping_reward`、`useful_push_applied` 和 `useful_push_distance_delta`，方便后续分析 agent 是否真的学会了“朝有效方向推箱子”。
+
+当前代码为了兼容旧实验，把 reward shaping 距离语义做成了命令行可切换：
+
+```bash
+--box_target_distance_mode reverse_push
+--agent_box_distance_mode useful
+```
+
+这是 v2 默认含义：box-target 用 reverse-push distance，agent-box 用有效站位距离。
+
+```bash
+--box_target_distance_mode bfs
+--agent_box_distance_mode adjacent
+```
+
+这是早期朴素 BFS 含义：box-target 只考虑墙，不考虑其他箱子和 agent；agent-box 会把箱子和另一名 agent 当作障碍，计算玩家到箱子相邻格的 BFS 距离并加 1。`run8/` 续训脚本使用这一组参数复现实验早期的 reward 定义。
+
+还有一个诊断参数：
+
+```bash
+--shaping_unreachable_distance 12
+```
+
+它会把不可达距离裁剪为指定值。默认不裁剪，仍使用地图面积作为不可达距离。这个参数主要用于 v2 奖励尺度诊断，避免不可达状态从 `-49` 这类较大差分突然主导训练。
+
+### 2.2 GRU/RNN 与动作历史
+
+HARL 本身已经有 GRU recurrent policy/critic，代码位置：
+
+- `HARL/harl/models/base/rnn.py`
+- `HARL/harl/models/policy_models/stochastic_policy.py`
+- `HARL/harl/models/value_function_models/v_net.py`
+
+Sokoban 环境侧新增了：
+
+```bash
+--action_history_len 8
+```
+
+它会把过去 8 步双方实际执行动作加入 observation。每一步记录两个 agent 的 one-hot 动作；turn-based 下 active agent 记录真实执行动作，inactive agent 记录 noop。vector observation 因此会从默认 `297` 维变成：
+
+```text
+297 + 8 * 2 * 9 = 441
+```
+
+RNN 脚本同时打开：
+
+```bash
+--use_recurrent_policy True
+--recurrent_n 1
+--data_chunk_length 25
+```
+
+`data_chunk_length` 要能整除 `episode_length`，当前脚本 `episode_length=150`、`data_chunk_length=25` 是匹配的。由于 RNN 和动作历史改变了网络结构/输入维度，`run9/` 默认从头训练，不从旧 MLP checkpoint resume。
 
 ### 3. 命令行改参数
 

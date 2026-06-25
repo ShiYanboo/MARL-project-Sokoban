@@ -9,8 +9,11 @@
 - 已补好本机验证脚本与 Linux `conda` 安装脚本
 - 已完成最小可运行验证，确认训练、评估、保存模型的链路打通
 - 已补充结果可视化脚本，可从 `summary.json` 或 TensorBoard event 文件直接画曲线图
+- 已加入 reward shaping v2，并保留旧版朴素 BFS shaping 的命令行开关
+- 已加入 v0/v1/v2 混合训练支持，可按 `scenario_pool` 轮换不同 Sokoban 变体
+- 已加入 GRU/RNN 实验入口，支持把过去若干步双方实际执行动作加入 observation
 
-当前重点不是“已经训出很强的策略”，而是“实验框架已经可复现、可扩展、可继续做大规模实验”。目前主线实验已经回到 HAPPO + MLP，CNN 版本保留为对照。
+当前重点不是“已经训出很强的策略”，而是“实验框架已经可复现、可扩展、可继续做大规模实验”。目前主线实验仍以 HAPPO + MLP + reward shaping 为主，CNN 与 GRU/RNN 版本保留为对照。
 
 ---
 
@@ -39,6 +42,10 @@
   Sokoban 的 on-policy 日志器，负责额外记录成功率、回合制执行统计、推箱次数等指标
 - `HARL/harl/configs/envs_cfgs/sokoban.yaml`
   Sokoban 环境配置
+- `run8/`
+  朴素 BFS shaping 已筛选方案的续训、v0/v1/v2 混合训练脚本
+- `run9/`
+  GRU/RNN + 动作历史 observation 的新实验脚本
 
 HARL 注册位置：
 
@@ -81,6 +88,8 @@ HARL 注册位置：
 - 每一步只有一个 agent 处于激活状态，另一个 agent 只有 `noop` 可选
 - 激活 agent 按回合在两个玩家之间交替
 - 底层环境返回的是团队共享 reward，再复制给两个 agent
+- 可选 `scenario_pool` 会在 reset 时按顺序轮换多个 gym scenario，例如 v0/v1/v2 做 1:1:1 混合训练
+- 可选 `action_history_len` 会把过去若干步双方实际执行动作加入 observation；默认 `0`，旧脚本维度不变
 
 当前 `info` 里额外补了这些统计，便于监测：
 
@@ -131,7 +140,38 @@ HARL 封装层在原始奖励之上增加了可配置的 reward shaping，定义
 
 重复推入 target 的次数感知奖励暂未加入。它依赖 episode 历史计数，而当前无 RNN actor 无法直接观察该状态，会额外引入部分可观测性。
 
-### 5.2 当前 credit 如何分配
+### 5.2 reward shaping v2 与旧 BFS 兼容模式
+
+当前 `reward_shaping.py` 同时支持两套距离语义：
+
+- `--box_target_distance_mode reverse_push`
+  v2 默认模式。箱子到目标距离使用 reverse-push distance table，估计“箱子理论上最少被推几次能到目标”。它考虑墙和推箱站位约束，但不把其他箱子作为长程障碍。
+- `--box_target_distance_mode bfs`
+  旧版朴素模式。箱子到目标距离使用目标出发的普通 BFS，只考虑墙，不考虑玩家和其他箱子。
+- `--agent_box_distance_mode useful`
+  v2 默认模式。agent-box 距离改为玩家到“能让全局 box-target 距离下降的有效站位”的距离。
+- `--agent_box_distance_mode adjacent`
+  旧版朴素模式。玩家到箱子相邻格的 BFS 距离，BFS 时会把箱子和另一名玩家作为障碍，并在相邻格距离上加 1。该模式用于复现实验早期的朴素 BFS shaping。
+
+默认配置是 v2：
+
+```yaml
+box_target_distance_mode: reverse_push
+agent_box_distance_mode: useful
+```
+
+`run8/` 中所有旧 BFS 续训脚本都会显式传入：
+
+```bash
+--box_target_distance_mode bfs
+--agent_box_distance_mode adjacent
+```
+
+这样它们继续训练旧模型时不会悄悄切换到 v2 reward 语义。
+
+另有 `--shaping_unreachable_distance` 可选参数，用于把不可达距离裁剪到指定值；默认 `~` 表示仍使用地图面积作为不可达距离。该参数主要用于 v2 诊断，例如 `run7.8/run7.9` 系列曾尝试 cap 到 5 或 12。
+
+### 5.3 当前 credit 如何分配
 
 环境层面目前没有做手工细粒度 credit shaping，也就是说：
 
@@ -202,7 +242,39 @@ credit assignment 主要由算法本身完成。
 - `models/`
   保存下来的模型参数
 
-### 6.2 现有可视化方式
+### 6.2 现有实验脚本分组
+
+仓库根目录保留早期单实验脚本，例如 `run6_0.sh`、`run6.1.sh`、`run6.2.sh`、`run7*.sh`。新增大批脚本已经放入子目录，避免根目录过于拥挤：
+
+- `run8/`
+  记录朴素 BFS shaping 已筛选方案的继续训练和混合训练。每个方案先从已经跑过一轮的 `resume5m` 结果继续两轮，每轮 `5e6` steps；随后各自独立进行 v0/v1/v2 的 1:1:1 混合训练四轮。
+- `run9/`
+  记录 GRU/RNN + 动作历史 observation 的新实验。从 0 开始训练，不加载旧 MLP checkpoint。
+
+`run8/` 中的总控脚本：
+
+- `run8/run_general8.1.sh`: strongpot 完整流水线
+- `run8/run_general8.2.sh`: nodeadlock 完整流水线
+- `run8/run_general8.3.sh`: nodl-nopush 完整流水线
+- `run8/run_general8.4.sh`: noshape baseline 完整流水线
+- `run8/run_general8.5.sh`: 依次跑上面四套
+
+`run9/` 中的主要脚本：
+
+- `run9/run9.1_smoke.sh`: GRU 小规模 smoke test
+- `run9/run9.2_bfs_strongpot_rnn.sh`: 旧 BFS strongpot + GRU
+- `run9/run9.3_bfs_nodl_nopush_rnn.sh`: 旧 BFS nodl-nopush + GRU
+- `run9/run9.4_v2_cap12_rnn.sh`: v2 cap12 + GRU
+- `run9/run_general9.1.sh`: 依次跑三条主 RNN 实验
+
+这些脚本内部都会自动切回仓库根目录，因此可以从仓库根目录运行：
+
+```bash
+bash run8/run_general8.1.sh
+bash run9/run9.1_smoke.sh
+```
+
+### 6.3 现有可视化方式
 
 #### 方式 A：直接画图
 
@@ -247,7 +319,7 @@ PYTHONNOUSERSITE=1 python -m tensorboard.main \
 - TensorBoard 2.13 仍使用 `np.string_`，因此需要 `numpy<2`，这里固定为 `numpy==1.26.4`
 - setup 脚本现在会一并固定 `numpy==1.26.4`、`tensorboard==2.13.0`、`tensorboardX==2.6.5`、`protobuf<5`、`setuptools==65.5.0`、`six`
 
-### 6.3 目前建议重点监测哪些指标
+### 6.4 目前建议重点监测哪些指标
 
 结合 HARL 当前实现，以及 HAPPO / PPO 类论文里常见的实验图，建议重点看：
 
@@ -393,8 +465,9 @@ HAPPO 是 PPO 系列，稳定性还要看优化指标：
 - 另一名玩家的位置
 - 当前优先执行权
 - 当前步数占最大步数的比例
+- 可选动作历史：过去 `action_history_len` 步双方实际执行动作的 one-hot，默认关闭
 
-这些通道会被展平，形成一个 1D 向量。当前 TwoPlayer-Sokoban-v0 下默认维度是 `297`。
+这些通道会被展平，形成一个 1D 向量。当前 TwoPlayer-Sokoban-v0 下默认维度是 `297`。如果设置 `--action_history_len 8`，会额外加入 `8 * 2 * 9 = 144` 维动作历史，因此 vector observation 变为 `441` 维。
 
 #### HAPPO actor 的处理过程
 
@@ -411,6 +484,16 @@ HAPPO 是 PPO 系列，稳定性还要看优化指标：
 - `use_recurrent_policy: False`
 
 所以当前默认实际上是纯 MLP，不带 RNN。
+
+如果在命令行开启：
+
+```bash
+--use_recurrent_policy True
+--recurrent_n 1
+--data_chunk_length 25
+```
+
+HARL 会复用内置 `RNNLayer`，其底层是 GRU。`run9/` 脚本同时开启 `--action_history_len 8`，让每个 agent 能显式看到过去 8 步双方动作；GRU hidden state 则可继续积累更长历史。由于 RNN 和动作历史都会改变模型结构或输入维度，`run9/` 默认从 0 训练，不从旧 MLP checkpoint resume。
 
 #### HAPPO actor 的输出
 

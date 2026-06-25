@@ -4,6 +4,7 @@ state_type: EP
 control_mode: turn_based
 observation_type: vector
 conflict_resolution: round_robin
+action_history_len: 0
 reward_scale: 1.0
 reward_finished: ~
 use_reward_shaping: False

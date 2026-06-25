@@ -38,6 +38,9 @@ class SokobanEnv:
         self.observation_type = self.args.get("observation_type", "vector")
         self.conflict_resolution = self.args.get("conflict_resolution", "round_robin")
         self.max_steps = self.args.get("max_steps")
+        self.action_history_len = int(self.args.get("action_history_len", 0) or 0)
+        if self.action_history_len < 0:
+            raise ValueError("action_history_len must be non-negative.")
         self.reward_scale = float(self.args.get("reward_scale", 1.0))
         self.use_reward_shaping = bool(
             self.args.get("use_reward_shaping", False)
@@ -103,8 +106,10 @@ class SokobanEnv:
         self._priority_agent = 0
         self._rng = np.random.default_rng()
         self._reset_retry_limit = int(self.args.get("reset_retry_limit", 20))
+        self.action_space = [Discrete(9) for _ in range(self.n_agents)]
 
         self._reset_env()
+        self._reset_action_history()
 
         obs_shape = self._build_agent_obs(agent_id=0).shape
         state_shape = self._build_shared_state().shape
@@ -116,7 +121,6 @@ class SokobanEnv:
             Box(low=0.0, high=1.0, shape=state_shape, dtype=np.float32)
             for _ in range(self.n_agents)
         ]
-        self.action_space = [Discrete(9) for _ in range(self.n_agents)]
 
     def step(self, actions):
         actions = np.asarray(actions).reshape(self.n_agents, -1)
@@ -136,6 +140,9 @@ class SokobanEnv:
         else:
             shaping = self.reward_shaper.empty_result()
         reward = base_reward + shaping["total"]
+        self._record_action_history(
+            self._executed_joint_actions(chosen_agent, env_action, discrete_actions)
+        )
         self._priority_agent = 1 - self._priority_agent
 
         obs = self._get_obs()
@@ -199,6 +206,7 @@ class SokobanEnv:
         self._seed += 1
         self._priority_agent = 0
         self._reset_env()
+        self._reset_action_history()
         return self._get_obs(), self._get_share_obs(), self.get_avail_actions()
 
     def get_avail_actions(self):
@@ -306,6 +314,41 @@ class SokobanEnv:
             f"Failed to generate a valid two-player Sokoban room for {self.scenario}."
         ) from last_error
 
+    def _reset_action_history(self):
+        self._action_history = np.zeros(
+            (self.action_history_len, self.n_agents, self.action_space[0].n),
+            dtype=np.float32,
+        )
+
+    def _executed_joint_actions(self, chosen_agent, env_action, requested_actions):
+        executed_actions = [0 for _ in range(self.n_agents)]
+        if chosen_agent in range(self.n_agents) and env_action != 0:
+            executed_actions[chosen_agent] = int(requested_actions[chosen_agent])
+        return executed_actions
+
+    def _record_action_history(self, executed_actions):
+        if self.action_history_len == 0:
+            return
+        self._action_history[:-1] = self._action_history[1:]
+        self._action_history[-1].fill(0.0)
+        for agent_id, action in enumerate(executed_actions):
+            action = int(action)
+            if 0 <= action < self.action_space[agent_id].n:
+                self._action_history[-1, agent_id, action] = 1.0
+
+    def _action_history_vector(self):
+        if self.action_history_len == 0:
+            return np.empty(0, dtype=np.float32)
+        return self._action_history.reshape(-1).astype(np.float32)
+
+    def _action_history_maps(self, shape):
+        if self.action_history_len == 0:
+            return []
+        return [
+            self._constant_map(value, shape)
+            for value in self._action_history.reshape(-1)
+        ]
+
     def _get_obs(self):
         return [self._build_agent_obs(agent_id) for agent_id in range(self.n_agents)]
 
@@ -341,6 +384,7 @@ class SokobanEnv:
                     ),
                 ]
             )
+            channels.extend(self._action_history_maps(room_state.shape))
             return np.stack(channels, axis=0).astype(np.float32)
 
         flat = np.concatenate([channel.reshape(-1) for channel in channels], axis=0)
@@ -352,7 +396,9 @@ class SokobanEnv:
             ],
             dtype=np.float32,
         )
-        return np.concatenate([flat, extras], axis=0).astype(np.float32)
+        return np.concatenate(
+            [flat, extras, self._action_history_vector()], axis=0
+        ).astype(np.float32)
 
     def _build_shared_state(self):
         room_fixed = self.env.room_fixed
@@ -380,6 +426,7 @@ class SokobanEnv:
                     ),
                 ]
             )
+            channels.extend(self._action_history_maps(room_state.shape))
             return np.stack(channels, axis=0).astype(np.float32)
 
         flat = np.concatenate([channel.reshape(-1) for channel in channels], axis=0)
@@ -391,7 +438,9 @@ class SokobanEnv:
             ],
             dtype=np.float32,
         )
-        return np.concatenate([flat, extras], axis=0).astype(np.float32)
+        return np.concatenate(
+            [flat, extras, self._action_history_vector()], axis=0
+        ).astype(np.float32)
 
     @staticmethod
     def _position_map(position, shape):

@@ -10,7 +10,7 @@ mkdir -p "$LOG_DIR"
 LOGFILE="$LOG_DIR/run9.4_v2_cap12_rnn_$(date +%Y%m%d_%H%M%S).log"
 echo "Logging to $LOGFILE"
 
-CUDA_VISIBLE_DEVICES=5 PYTHONUNBUFFERED=1 python -u HARL/examples/train.py \
+CUDA_VISIBLE_DEVICES=4 PYTHONUNBUFFERED=1 python -u HARL/examples/train.py \
   --algo happo \
   --env sokoban \
   --scenario TwoPlayer-Sokoban-v0 \

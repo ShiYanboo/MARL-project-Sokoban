@@ -28,6 +28,11 @@ class SokobanEnv:
 
         self.args = copy.deepcopy(args)
         self.scenario = self.args.get("scenario", "TwoPlayer-Sokoban-v0")
+        self.scenario_pool = self._parse_scenario_pool(
+            self.args.get("scenario_pool")
+        )
+        if self.scenario_pool:
+            self.scenario = self.scenario_pool[0]
         self.state_type = self.args.get("state_type", "EP")
         self.control_mode = self.args.get("control_mode", "turn_based")
         self.observation_type = self.args.get("observation_type", "vector")
@@ -64,6 +69,13 @@ class SokobanEnv:
                 if self.use_reward_shaping
                 else 0.0
             ),
+            unreachable_distance=self.args.get("shaping_unreachable_distance"),
+            box_target_distance_mode=self.args.get(
+                "box_target_distance_mode", "reverse_push"
+            ),
+            agent_box_distance_mode=self.args.get(
+                "agent_box_distance_mode", "useful"
+            ),
         )
         if self.control_mode not in {"turn_based", "joint_resolve"}:
             raise ValueError(
@@ -76,21 +88,18 @@ class SokobanEnv:
                 "Choose from: vector, cnn."
             )
 
-        make_kwargs = {}
+        self.make_kwargs = {}
         for key in ["dim_room", "max_steps", "num_boxes", "num_gen_steps"]:
             value = self.args.get(key)
             if value is not None:
                 if key == "dim_room" and isinstance(value, int):
                     value = (value, value)
-                make_kwargs[key] = value
+                self.make_kwargs[key] = value
 
-        self.env = gym.make(self.scenario, **make_kwargs)
-        if self.args.get("reward_finished") is not None:
-            self.env.unwrapped.reward_finished = float(
-                self.args["reward_finished"]
-            )
+        self.env = self._make_env(self.scenario)
         self.n_agents = 2
         self._seed = 0
+        self._scenario_pool_index = 0
         self._priority_agent = 0
         self._rng = np.random.default_rng()
         self._reset_retry_limit = int(self.args.get("reset_retry_limit", 20))
@@ -134,6 +143,7 @@ class SokobanEnv:
 
         info = {
             "chosen_agent": chosen_agent,
+            "scenario": self.scenario,
             "env_action": env_action,
             "priority_agent_next": self._priority_agent,
             "control_mode": self.control_mode,
@@ -179,6 +189,12 @@ class SokobanEnv:
         return obs, share_obs, rewards, dones, infos, self.get_avail_actions()
 
     def reset(self):
+        if self.scenario_pool:
+            scenario = self.scenario_pool[
+                self._scenario_pool_index % len(self.scenario_pool)
+            ]
+            self._scenario_pool_index += 1
+            self._switch_scenario(scenario)
         self.env.seed(self._seed)
         self._seed += 1
         self._priority_agent = 0
@@ -207,6 +223,32 @@ class SokobanEnv:
     def seed(self, seed):
         self._seed = seed
         self._rng = np.random.default_rng(seed)
+        if self.scenario_pool:
+            self._scenario_pool_index = int(seed) % len(self.scenario_pool)
+
+    @staticmethod
+    def _parse_scenario_pool(value):
+        if value is None or value == "":
+            return []
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return list(value)
+
+    def _make_env(self, scenario):
+        env = gym.make(scenario, **self.make_kwargs)
+        if self.args.get("reward_finished") is not None:
+            env.unwrapped.reward_finished = float(self.args["reward_finished"])
+        return env
+
+    def _switch_scenario(self, scenario):
+        if scenario == self.scenario:
+            return
+        try:
+            self.env.close()
+        except Exception:
+            pass
+        self.scenario = scenario
+        self.env = self._make_env(self.scenario)
 
     def _resolve_action(self, actions):
         if self.control_mode == "turn_based":

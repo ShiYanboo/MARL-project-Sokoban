@@ -6,7 +6,7 @@ mkdir -p "$LOG_DIR"
 LOGFILE="$LOG_DIR/run7.5_$(date +%Y%m%d_%H%M%S).log"
 echo "Logging to $LOGFILE"
 
-CUDA_VISIBLE_DEVICES=0 PYTHONUNBUFFERED=1 python -u HARL/examples/train.py \
+CUDA_VISIBLE_DEVICES=4 PYTHONUNBUFFERED=1 python -u HARL/examples/train.py \
   --algo happo \
   --env sokoban \
   --scenario TwoPlayer-Sokoban-v0 \
@@ -25,8 +25,8 @@ CUDA_VISIBLE_DEVICES=0 PYTHONUNBUFFERED=1 python -u HARL/examples/train.py \
   --reward_finished 100 \
   --gamma 0.995 \
   --gae_lambda 0.98 \
-  --lr 5e-5 \
-  --critic_lr 1.5e-4 \
+  --lr 1e-4 \
+  --critic_lr 3e-4 \
   --entropy_coef 0.02 \
   --ppo_epoch 5 \
   --clip_param 0.1 \

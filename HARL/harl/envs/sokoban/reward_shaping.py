@@ -25,6 +25,9 @@ class SokobanRewardShaper:
         deadlock_penalty_mode="state",
         agent_box_distance_weight=0.005,
         useful_push_weight=0.0,
+        unreachable_distance=None,
+        box_target_distance_mode="reverse_push",
+        agent_box_distance_mode="useful",
     ):
         self.distance_weight = float(distance_weight)
         self.pushability_weight = float(pushability_weight)
@@ -32,10 +35,23 @@ class SokobanRewardShaper:
         self.deadlock_penalty_mode = deadlock_penalty_mode
         self.agent_box_distance_weight = float(agent_box_distance_weight)
         self.useful_push_weight = float(useful_push_weight)
+        self.unreachable_distance = (
+            None if unreachable_distance is None else float(unreachable_distance)
+        )
+        self.box_target_distance_mode = box_target_distance_mode
+        self.agent_box_distance_mode = agent_box_distance_mode
         self._push_distance_cache = {}
         if self.deadlock_penalty_mode not in {"state", "increase"}:
             raise ValueError(
                 "deadlock_penalty_mode must be either 'state' or 'increase'."
+            )
+        if self.box_target_distance_mode not in {"reverse_push", "bfs"}:
+            raise ValueError(
+                "box_target_distance_mode must be either 'reverse_push' or 'bfs'."
+            )
+        if self.agent_box_distance_mode not in {"useful", "adjacent"}:
+            raise ValueError(
+                "agent_box_distance_mode must be either 'useful' or 'adjacent'."
             )
 
     @property
@@ -143,10 +159,17 @@ class SokobanRewardShaper:
         players = tuple(tuple(position) for position in state["players"])
         boxes = self._positions((room_state == BOX) | (room_state == BOX_ON_TARGET))
         targets = self._positions(room_fixed == TARGET)
-        push_distance_maps = self._target_push_distance_maps(room_fixed, targets)
-        box_target_distance = self._minimum_target_matching_distance_from_maps(
-            boxes, push_distance_maps, room_fixed.size
-        )
+        unreachable = self._unreachable_value(room_fixed)
+        if self.box_target_distance_mode == "reverse_push":
+            push_distance_maps = self._target_push_distance_maps(room_fixed, targets)
+            box_target_distance = self._minimum_target_matching_distance_from_maps(
+                boxes, push_distance_maps, unreachable
+            )
+        else:
+            push_distance_maps = ()
+            box_target_distance = self._minimum_target_matching_distance(
+                room_fixed, boxes, targets
+            )
         pushabilities = self._box_pushabilities(
             room_fixed, room_state, boxes, players
         )
@@ -154,19 +177,25 @@ class SokobanRewardShaper:
             pushability == 0 and room_fixed[box] != TARGET
             for box, pushability in zip(boxes, pushabilities)
         )
-        return {
-            "boxes": boxes,
-            "box_target_distance": box_target_distance,
-            "pushability": sum(pushabilities),
-            "deadlocked_boxes": deadlocked_boxes,
-            "agent_box_distance": self._agent_useful_position_distance(
+        if self.agent_box_distance_mode == "useful":
+            agent_box_distance = self._agent_useful_position_distance(
                 room_fixed,
                 room_state,
                 boxes,
                 players,
                 push_distance_maps,
                 box_target_distance,
-            ),
+            )
+        else:
+            agent_box_distance = self._agent_box_distance(
+                room_fixed, room_state, boxes, players
+            )
+        return {
+            "boxes": boxes,
+            "box_target_distance": box_target_distance,
+            "pushability": sum(pushabilities),
+            "deadlocked_boxes": deadlocked_boxes,
+            "agent_box_distance": agent_box_distance,
         }
 
     @staticmethod
@@ -195,7 +224,7 @@ class SokobanRewardShaper:
         return distance_maps
 
     def _reverse_push_distance_map(self, room_fixed, target):
-        unreachable = float(room_fixed.size)
+        unreachable = self._unreachable_value(room_fixed)
         distances = np.full(room_fixed.shape, unreachable, dtype=np.float32)
         if room_fixed[target] == WALL:
             return distances
@@ -240,6 +269,43 @@ class SokobanRewardShaper:
                 return 0.0
             best = float(unreachable * (len(boxes) - box_index))
             for target_index in range(len(push_distance_maps)):
+                target_bit = 1 << target_index
+                if used_targets & target_bit:
+                    continue
+                best = min(
+                    best,
+                    costs[box_index][target_index]
+                    + solve(box_index + 1, used_targets | target_bit),
+                )
+            return best
+
+        return solve(0, 0)
+
+    def _minimum_target_matching_distance(self, room_fixed, boxes, targets):
+        if not boxes:
+            return 0.0
+        if not targets:
+            return float(self._unreachable_value(room_fixed) * len(boxes))
+
+        unreachable = self._unreachable_value(room_fixed)
+        target_distance_maps = tuple(
+            self._distance_map(room_fixed, target, blocked=set())
+            for target in targets
+        )
+        costs = tuple(
+            tuple(
+                float(target_distance_maps[target_index].get(box, unreachable))
+                for target_index in range(len(targets))
+            )
+            for box in boxes
+        )
+
+        @lru_cache(maxsize=None)
+        def solve(box_index, used_targets):
+            if box_index == len(boxes):
+                return 0.0
+            best = float(unreachable * (len(boxes) - box_index))
+            for target_index in range(len(targets)):
                 target_bit = 1 << target_index
                 if used_targets & target_bit:
                     continue
@@ -310,7 +376,7 @@ class SokobanRewardShaper:
     ):
         if not boxes:
             return 0.0
-        unreachable = float(room_fixed.size)
+        unreachable = self._unreachable_value(room_fixed)
         box_set = set(boxes)
         player_set = set(players)
         distance_maps = []
@@ -335,6 +401,38 @@ class SokobanRewardShaper:
                     distance_map[cell]
                     for distance_map in distance_maps
                     for cell in useful_cells
+                    if cell in distance_map
+                ),
+                default=unreachable,
+            )
+            total += distance
+        return total
+
+    def _agent_box_distance(self, room_fixed, room_state, boxes, players):
+        if not boxes:
+            return 0.0
+        unreachable = self._unreachable_value(room_fixed)
+        box_set = set(boxes)
+        player_set = set(players)
+        distance_maps = []
+        for player in players:
+            blocked = box_set | (player_set - {player})
+            distance_maps.append(self._distance_map(room_fixed, player, blocked))
+
+        total = 0.0
+        for box in boxes:
+            adjacent_cells = [
+                self._add(box, direction)
+                for direction in DIRECTIONS
+                if self._inside(room_fixed.shape, self._add(box, direction))
+                and room_fixed[self._add(box, direction)] != WALL
+                and self._add(box, direction) not in box_set
+            ]
+            distance = min(
+                (
+                    distance_map[cell] + 1
+                    for distance_map in distance_maps
+                    for cell in adjacent_cells
                     if cell in distance_map
                 ),
                 default=unreachable,
@@ -371,7 +469,7 @@ class SokobanRewardShaper:
             next_boxes = list(boxes)
             next_boxes[box_index] = front
             next_distance = self._minimum_target_matching_distance_from_maps(
-                tuple(next_boxes), push_distance_maps, room_fixed.size
+                tuple(next_boxes), push_distance_maps, self._unreachable_value(room_fixed)
             )
             if next_distance < current_box_target_distance:
                 useful_cells.append(rear)
@@ -434,3 +532,8 @@ class SokobanRewardShaper:
     @staticmethod
     def _subtract(position, direction):
         return position[0] - direction[0], position[1] - direction[1]
+
+    def _unreachable_value(self, room_fixed):
+        if self.unreachable_distance is not None:
+            return self.unreachable_distance
+        return float(room_fixed.size)

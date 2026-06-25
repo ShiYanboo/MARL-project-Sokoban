@@ -1,4 +1,5 @@
 scenario: TwoPlayer-Sokoban-v0
+scenario_pool: ~
 state_type: EP
 control_mode: turn_based
 observation_type: vector
@@ -12,6 +13,9 @@ deadlock_penalty: 2.0
 deadlock_penalty_mode: state
 agent_box_distance_shaping_weight: 0.005
 useful_push_shaping_weight: 0.0
+shaping_unreachable_distance: ~
+box_target_distance_mode: reverse_push
+agent_box_distance_mode: useful
 reset_retry_limit: 20
 max_steps: ~
 dim_room: ~

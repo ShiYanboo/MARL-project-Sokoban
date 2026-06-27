@@ -38,6 +38,21 @@ class SokobanEnv:
         self.observation_type = self.args.get("observation_type", "vector")
         self.conflict_resolution = self.args.get("conflict_resolution", "round_robin")
         self.max_steps = self.args.get("max_steps")
+        self.use_mixed_obs_padding = bool(
+            self.args.get("use_mixed_obs_padding", False)
+        )
+        self.mixed_obs_padding_mode = self.args.get(
+            "mixed_obs_padding_mode", "top_left"
+        )
+        if self.mixed_obs_padding_mode not in {"top_left", "center", "random_episode"}:
+            raise ValueError(
+                "mixed_obs_padding_mode must be one of: top_left, center, random_episode."
+            )
+        self.obs_room_shape = (
+            self._parse_room_shape(self.args.get("obs_dim_room"))
+            if self.use_mixed_obs_padding
+            else None
+        )
         self.action_history_len = int(self.args.get("action_history_len", 0) or 0)
         if self.action_history_len < 0:
             raise ValueError("action_history_len must be non-negative.")
@@ -105,10 +120,12 @@ class SokobanEnv:
         self._scenario_pool_index = 0
         self._priority_agent = 0
         self._rng = np.random.default_rng()
+        self._obs_padding_offset = (0, 0)
         self._reset_retry_limit = int(self.args.get("reset_retry_limit", 20))
         self.action_space = [Discrete(9) for _ in range(self.n_agents)]
 
         self._reset_env()
+        self._reset_obs_padding_offset()
         self._reset_action_history()
 
         obs_shape = self._build_agent_obs(agent_id=0).shape
@@ -147,6 +164,8 @@ class SokobanEnv:
 
         obs = self._get_obs()
         share_obs = self._get_share_obs()
+        if self.use_mixed_obs_padding:
+            self._validate_obs_shapes(obs, share_obs)
 
         info = {
             "chosen_agent": chosen_agent,
@@ -206,8 +225,13 @@ class SokobanEnv:
         self._seed += 1
         self._priority_agent = 0
         self._reset_env()
+        self._reset_obs_padding_offset()
         self._reset_action_history()
-        return self._get_obs(), self._get_share_obs(), self.get_avail_actions()
+        obs = self._get_obs()
+        share_obs = self._get_share_obs()
+        if self.use_mixed_obs_padding:
+            self._validate_obs_shapes(obs, share_obs)
+        return obs, share_obs, self.get_avail_actions()
 
     def get_avail_actions(self):
         if self.control_mode == "turn_based":
@@ -241,6 +265,26 @@ class SokobanEnv:
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return list(value)
+
+    @staticmethod
+    def _parse_room_shape(value):
+        if value is None or value == "":
+            return None
+        if isinstance(value, int):
+            return (value, value)
+        if isinstance(value, str):
+            if "x" in value:
+                parts = value.lower().split("x", maxsplit=1)
+            else:
+                parts = value.split(",", maxsplit=1)
+            if len(parts) == 2:
+                return (int(parts[0]), int(parts[1]))
+            return (int(value), int(value))
+        if isinstance(value, (list, tuple)) and len(value) == 2:
+            return (int(value[0]), int(value[1]))
+        raise ValueError(
+            "obs_dim_room must be an int, a two-item list/tuple, or a string like '10x10'."
+        )
 
     def _make_env(self, scenario):
         env = gym.make(scenario, **self.make_kwargs)
@@ -349,6 +393,78 @@ class SokobanEnv:
             for value in self._action_history.reshape(-1)
         ]
 
+    def _obs_board_shape(self, room_shape):
+        if self.obs_room_shape is None:
+            return room_shape
+        if (
+            room_shape[0] > self.obs_room_shape[0]
+            or room_shape[1] > self.obs_room_shape[1]
+        ):
+            raise ValueError(
+                f"Current Sokoban room shape {room_shape} is larger than "
+                f"obs_dim_room {self.obs_room_shape}. Increase --obs_dim_room "
+                "or force a smaller --dim_room."
+            )
+        return self.obs_room_shape
+
+    def _reset_obs_padding_offset(self):
+        self._obs_padding_offset = (0, 0)
+        if self.obs_room_shape is None:
+            return
+        room_shape = self.env.room_state.shape
+        obs_shape = self._obs_board_shape(room_shape)
+        max_row = obs_shape[0] - room_shape[0]
+        max_col = obs_shape[1] - room_shape[1]
+        if self.mixed_obs_padding_mode == "center":
+            self._obs_padding_offset = (max_row // 2, max_col // 2)
+        elif self.mixed_obs_padding_mode == "random_episode":
+            self._obs_padding_offset = (
+                int(self._rng.integers(0, max_row + 1)) if max_row > 0 else 0,
+                int(self._rng.integers(0, max_col + 1)) if max_col > 0 else 0,
+            )
+
+    def _pad_channel(self, channel, shape, fill_value=0.0):
+        if channel.shape == shape:
+            return channel.astype(np.float32)
+        padded = np.full(shape, fill_value, dtype=np.float32)
+        rows, cols = channel.shape
+        row_offset, col_offset = self._obs_padding_offset
+        padded[
+            row_offset : row_offset + rows,
+            col_offset : col_offset + cols,
+        ] = channel.astype(np.float32)
+        return padded
+
+    def _pad_symbolic_channels(self, channels):
+        shape = self._obs_board_shape(channels[0].shape)
+        if self.obs_room_shape is None:
+            return channels, shape
+        fill_values = [1.0] + [0.0] * (len(channels) - 1)
+        return [
+            self._pad_channel(channel, shape, fill_value)
+            for channel, fill_value in zip(channels, fill_values)
+        ], shape
+
+    def _validate_obs_shapes(self, obs, share_obs):
+        for agent_id, agent_obs in enumerate(obs):
+            expected_shape = self.observation_space[agent_id].shape
+            if agent_obs.shape != expected_shape:
+                raise ValueError(
+                    f"Sokoban observation shape changed from {expected_shape} "
+                    f"to {agent_obs.shape} after switching to {self.scenario}. "
+                    "For mixed map sizes, set --obs_dim_room to a fixed canvas "
+                    "large enough for every scenario, or force --dim_room."
+                )
+        for agent_id, state in enumerate(share_obs):
+            expected_shape = self.share_observation_space[agent_id].shape
+            if state.shape != expected_shape:
+                raise ValueError(
+                    f"Sokoban shared observation shape changed from {expected_shape} "
+                    f"to {state.shape} after switching to {self.scenario}. "
+                    "For mixed map sizes, set --obs_dim_room to a fixed canvas "
+                    "large enough for every scenario, or force --dim_room."
+                )
+
     def _get_obs(self):
         return [self._build_agent_obs(agent_id) for agent_id in range(self.n_agents)]
 
@@ -369,22 +485,23 @@ class SokobanEnv:
             self._position_map(self_pos, room_state.shape),
             self._position_map(other_pos, room_state.shape),
         ]
+        channels, obs_shape = self._pad_symbolic_channels(channels)
         if self.observation_type == "cnn":
             channels.extend(
                 [
                     self._constant_map(
-                        float(self._priority_agent == agent_id), room_state.shape
+                        float(self._priority_agent == agent_id), obs_shape
                     ),
                     self._constant_map(
-                        float(self._priority_agent != agent_id), room_state.shape
+                        float(self._priority_agent != agent_id), obs_shape
                     ),
                     self._constant_map(
                         self.env.num_env_steps / max(self.env.max_steps, 1),
-                        room_state.shape,
+                        obs_shape,
                     ),
                 ]
             )
-            channels.extend(self._action_history_maps(room_state.shape))
+            channels.extend(self._action_history_maps(obs_shape))
             return np.stack(channels, axis=0).astype(np.float32)
 
         flat = np.concatenate([channel.reshape(-1) for channel in channels], axis=0)
@@ -411,22 +528,23 @@ class SokobanEnv:
             self._position_map(self.env.player_positions[0], room_state.shape),
             self._position_map(self.env.player_positions[1], room_state.shape),
         ]
+        channels, obs_shape = self._pad_symbolic_channels(channels)
         if self.observation_type == "cnn":
             channels.extend(
                 [
                     self._constant_map(
-                        float(self._priority_agent == 0), room_state.shape
+                        float(self._priority_agent == 0), obs_shape
                     ),
                     self._constant_map(
-                        float(self._priority_agent == 1), room_state.shape
+                        float(self._priority_agent == 1), obs_shape
                     ),
                     self._constant_map(
                         self.env.num_env_steps / max(self.env.max_steps, 1),
-                        room_state.shape,
+                        obs_shape,
                     ),
                 ]
             )
-            channels.extend(self._action_history_maps(room_state.shape))
+            channels.extend(self._action_history_maps(obs_shape))
             return np.stack(channels, axis=0).astype(np.float32)
 
         flat = np.concatenate([channel.reshape(-1) for channel in channels], axis=0)

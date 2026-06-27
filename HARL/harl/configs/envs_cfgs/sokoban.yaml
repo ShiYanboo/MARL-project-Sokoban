@@ -5,6 +5,9 @@ control_mode: turn_based
 observation_type: vector
 conflict_resolution: round_robin
 action_history_len: 0
+use_mixed_obs_padding: False
+obs_dim_room: ~
+mixed_obs_padding_mode: top_left
 reward_scale: 1.0
 reward_finished: ~
 use_reward_shaping: False

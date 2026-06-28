@@ -21,6 +21,7 @@ def main():
         default="happo",
         choices=[
             "happo",
+            "hahypo",
             "hatrpo",
             "haa2c",
             "haddpg",
@@ -31,7 +32,7 @@ def main():
             "matd3",
             "mappo",
         ],
-        help="Algorithm name. Choose from: happo, hatrpo, haa2c, haddpg, hatd3, hasac, had3qn, maddpg, matd3, mappo.",
+        help="Algorithm name. Choose from: happo, hahypo, hatrpo, haa2c, haddpg, hatd3, hasac, had3qn, maddpg, matd3, mappo.",
     )
     parser.add_argument(
         "--env",

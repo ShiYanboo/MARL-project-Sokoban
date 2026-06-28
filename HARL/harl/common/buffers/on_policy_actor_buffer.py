@@ -71,6 +71,11 @@ class OnPolicyActorBuffer:
         # Buffer for active masks of this actor. Active masks denotes whether the agent is alive.
         self.active_masks = np.ones_like(self.masks)
 
+        # Optional per-transition credit used by Sokoban credit-assignment experiments.
+        self.credit_rewards = np.zeros(
+            (self.episode_length, self.n_rollout_threads, 1), dtype=np.float32
+        )
+
         self.factor = None
 
         self.step = 0
@@ -88,12 +93,15 @@ class OnPolicyActorBuffer:
         masks,
         active_masks=None,
         available_actions=None,
+        credit_rewards=None,
     ):
         """Insert data into actor buffer."""
         self.obs[self.step + 1] = obs.copy()
         self.rnn_states[self.step + 1] = rnn_states.copy()
         self.actions[self.step] = actions.copy()
         self.action_log_probs[self.step] = action_log_probs.copy()
+        if credit_rewards is not None:
+            self.credit_rewards[self.step] = credit_rewards.copy()
         self.masks[self.step + 1] = masks.copy()
         if active_masks is not None:
             self.active_masks[self.step + 1] = active_masks.copy()

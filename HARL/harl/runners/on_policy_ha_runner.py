@@ -52,6 +52,9 @@ class OnPolicyHARunner(OnPolicyBaseRunner):
             self.actor_buffer[agent_id].update_factor(
                 factor
             )  # current actor save factor
+            agent_advantages = self._advantages_with_actor_credit(
+                advantages, agent_id
+            )
 
             # the following reshaping combines the first two dimensions (i.e. episode_length and n_rollout_threads) to form a batch
             available_actions = (
@@ -85,11 +88,11 @@ class OnPolicyHARunner(OnPolicyBaseRunner):
             # update actor
             if self.state_type == "EP":
                 actor_train_info = self.actor[agent_id].train(
-                    self.actor_buffer[agent_id], advantages.copy(), "EP"
+                    self.actor_buffer[agent_id], agent_advantages, "EP"
                 )
             elif self.state_type == "FP":
                 actor_train_info = self.actor[agent_id].train(
-                    self.actor_buffer[agent_id], advantages[:, :, agent_id].copy(), "FP"
+                    self.actor_buffer[agent_id], agent_advantages, "FP"
                 )
 
             # compute action log probs for updated agent
@@ -128,3 +131,15 @@ class OnPolicyHARunner(OnPolicyBaseRunner):
         critic_train_info = self.critic.train(self.critic_buffer, self.value_normalizer)
 
         return actor_train_infos, critic_train_info
+
+    def _advantages_with_actor_credit(self, advantages, agent_id):
+        coef = float(self.env_args.get("actor_credit_coef", 0.0) or 0.0)
+        if coef == 0.0:
+            if self.state_type == "EP":
+                return advantages.copy()
+            return advantages[:, :, agent_id].copy()
+
+        credit = self.actor_buffer[agent_id].credit_rewards.copy()
+        if self.state_type == "EP":
+            return advantages.copy() + coef * credit
+        return advantages[:, :, agent_id].copy() + coef * credit

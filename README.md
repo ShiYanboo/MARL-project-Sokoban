@@ -12,8 +12,17 @@
 - 已加入 reward shaping v2，并保留旧版朴素 BFS shaping 的命令行开关
 - 已加入 v0/v1/v2 混合训练支持，可按 `scenario_pool` 轮换不同 Sokoban 变体
 - 已加入 GRU/RNN 实验入口，支持把过去若干步双方实际执行动作加入 observation
+- 已加入 13x13 padding / true-mix 实验入口，以及 actor-side credit assignment 小型算法改动
 
-当前重点不是“已经训出很强的策略”，而是“实验框架已经可复现、可扩展、可继续做大规模实验”。目前主线实验仍以 HAPPO + MLP + reward shaping 为主，CNN 与 GRU/RNN 版本保留为对照。
+当前重点不是“已经训出很强的策略”，而是“实验框架已经可复现、可扩展、可继续做大规模实验”。目前主线实验仍以 HAPPO + MLP + 旧 BFS reward shaping 为主，CNN、GRU/RNN、13x13 padding 和 actor-side credit 都保留为对照。
+
+截至当前阶段，实验结论大致是：
+
+- 单纯换 CNN encoder 没有带来稳定提升。
+- GRU/动作历史在 7x7 上看起来更有希望，但 13x13 padding 和 true-mix 泛化仍然困难。
+- reward shaping v2 在语义上更接近 Sokoban 推箱约束，但实际效果不如旧的朴素 BFS shaping 稳。
+- 目前最稳的轻量方案仍是 `v1-nodl-nopush`：保留 box-target BFS 势函数和 agent-box 势函数，去掉 deadlock 与 pushability 负项。
+- 新增 `run16/` 只做一个很小的算法层 credit-assignment 尝试。如果这组 5M 短实验仍没有明显超过 `v1-nodl-nopush`，建议停止继续魔改算法，转入报告整理。
 
 ---
 
@@ -173,7 +182,7 @@ agent_box_distance_mode: useful
 
 ### 5.3 当前 credit 如何分配
 
-环境层面目前没有做手工细粒度 credit shaping，也就是说：
+默认环境层面不做手工细粒度 credit shaping，也就是说：
 
 - 两个 agent 收到相同 reward
 - 不直接指定“这一步到底该主要奖励哪个 agent”
@@ -201,6 +210,66 @@ credit assignment 主要由算法本身完成。
 
 - `HARL/harl/runners/off_policy_ha_runner.py`
 - `HARL/harl/algorithms/critics/soft_twin_continuous_q_critic.py`
+
+### 5.4 run16：actor-side credit assignment
+
+当前新增了一个默认关闭的小型算法改动，用来测试“只给 active agent 更直接的 actor 学习信号”是否能降低方差。
+
+动机如下：
+
+- Sokoban 已经改成严格 `turn_based`。
+- 每一步只有 active agent 的动作真正改变底层环境。
+- inactive agent 只有 `noop` 可选，并且 actor buffer 中 active mask 为 `0`。
+- critic 仍应学习团队回报，因为任务目标仍是协作完成关卡。
+- 但是 actor 的 advantage 来自稀疏、长程、团队共享 return，方差很高；active agent 很难知道当前这一步移动/推箱到底是不是好。
+
+因此 run16 没有改 critic 目标，也没有把环境 reward 改成个人奖励，而是新增了一个可选的 actor-side auxiliary credit：
+
+```bash
+--actor_credit_mode none|active_progress|active_reward
+--actor_credit_coef 0.0
+```
+
+默认：
+
+```bash
+--actor_credit_mode none
+--actor_credit_coef 0.0
+```
+
+这时所有旧实验行为完全不变。
+
+开启后，runner 会从 `info` 中为每个 agent 生成一个 `credit_rewards` buffer，并在 HAPPO actor 更新前把它加到该 agent 的 actor advantage 上：
+
+```text
+actor_advantage = team_advantage + actor_credit_coef * active_agent_credit
+```
+
+critic buffer 仍然使用 `team_reward`，也就是原始团队奖励：
+
+```text
+critic_target_reward = team_reward
+```
+
+当前支持两种 credit：
+
+- `active_progress`
+  只在 agent 是本步 active agent 时生效。它给正向进展一个小 bonus，例如正 base reward、useful-push distance delta、正的 agent-box shaping、以及成功移动箱子的小奖励。
+- `active_reward`
+  只在 agent 是本步 active agent 时，把 team reward 的一个小比例加到 actor advantage 上。
+
+对应代码：
+
+- `HARL/harl/common/buffers/on_policy_actor_buffer.py`
+  新增 `credit_rewards`
+- `HARL/harl/runners/on_policy_base_runner.py`
+  从 `infos` 生成 actor credit，并保证 EP critic 仍使用 `team_reward`
+- `HARL/harl/runners/on_policy_ha_runner.py`
+  在 actor update 前把 credit 加到 advantage 上
+- `HARL/harl/envs/sokoban/sokoban_env.py`
+  在 `info` 中记录 `team_reward`
+
+这不是严格无偏的原始 policy gradient，而是一个很小的辅助学习信号。它的意义是测试“降低 active actor 的信用分配方差”是否比继续改 reward shaping / 网络结构更有帮助。推荐只跑 `run16/` 的三个 5M 短实验；如果没有明显收益，不建议继续扩展。
 
 ---
 
@@ -246,10 +315,32 @@ credit assignment 主要由算法本身完成。
 
 仓库根目录保留早期单实验脚本，例如 `run6_0.sh`、`run6.1.sh`、`run6.2.sh`、`run7*.sh`。新增大批脚本已经放入子目录，避免根目录过于拥挤：
 
+- `run0/`
+  原始奖励 baseline。`reward_finished=10`，无任何 shaping。包含 20M 独训和历史伪混合。
+- `run2/`
+  早期 HAPPO 超参 sweep，如 actor/critic 学习率、PPO epoch、clip、hidden size。
+- `run7/`
+  reward shaping v2 实验，包含 reverse-push distance、useful-position distance、unreachable-distance cap 和 CNN 对照。
 - `run8/`
   记录朴素 BFS shaping 已筛选方案的继续训练和混合训练。每个方案先从已经跑过一轮的 `resume5m` 结果继续两轮，每轮 `5e6` steps；随后各自独立进行 v0/v1/v2 的 1:1:1 混合训练四轮。
 - `run9/`
   记录 GRU/RNN + 动作历史 observation 的新实验。从 0 开始训练，不加载旧 MLP checkpoint。
+- `run10/`
+  v2 cap12 长程续训和历史伪混合。
+- `run11/`
+  GRU no-history / one-action-history 的补齐实验，尤其用于补过去没跑完的 7x7 伪混合阶段。
+- `run12/`
+  true-mix padded smoke tests，用来验证不固定 `dim_room/num_boxes` 时的 v0/v1/v2 混合链路。
+- `run13/`
+  7x7 到 13x13 的蒸馏尝试。实验结果不理想，保留为失败尝试记录。
+- `run14/`
+  13x13 random padding 从头训练 + true mix。
+- `run15/`
+  13x13 top-left padding curriculum + true mix，减少 random padding 带来的平移泛化负担。
+- `run16/`
+  actor-side credit assignment 小型算法实验。默认不影响旧代码，只有显式传入 `--actor_credit_coef > 0` 才启用。
+
+每个 `run*/` 文件夹都放了一个 `README.md`，优先看对应 README 再决定是否运行脚本。
 
 `run8/` 中的总控脚本：
 
@@ -267,11 +358,19 @@ credit assignment 主要由算法本身完成。
 - `run9/run9.4_v2_cap12_rnn.sh`: v2 cap12 + GRU
 - `run9/run_general9.1.sh`: 依次跑三条主 RNN 实验
 
+`run16/` 的 credit-assignment 对照：
+
+- `run16/run16.1_v1_nodl_nopush_credit_progress005.sh`: `active_progress`，系数 `0.05`
+- `run16/run16.2_v1_nodl_nopush_credit_progress010.sh`: `active_progress`，系数 `0.10`
+- `run16/run16.3_v1_nodl_nopush_credit_reward002.sh`: `active_reward`，系数 `0.02`
+- `run16/run_general16_credit_assignment.sh`: 依次跑上面三条
+
 这些脚本内部都会自动切回仓库根目录，因此可以从仓库根目录运行：
 
 ```bash
 bash run8/run_general8.1.sh
 bash run9/run9.1_smoke.sh
+bash run16/run_general16_credit_assignment.sh
 ```
 
 ### 6.3 现有可视化方式

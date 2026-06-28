@@ -457,6 +457,7 @@ class OnPolicyBaseRunner:
                 available_actions[:, agent_id]
                 if available_actions[0] is not None
                 else None,
+                self._actor_credit_from_infos(infos, agent_id),
             )
 
         if self.state_type == "EP":
@@ -464,7 +465,7 @@ class OnPolicyBaseRunner:
                 share_obs[:, 0],
                 rnn_states_critic,
                 values,
-                rewards[:, 0],
+                self._team_rewards_from_infos(infos, rewards),
                 masks[:, 0],
                 bad_masks,
             )
@@ -488,6 +489,52 @@ class OnPolicyBaseRunner:
             )
         can_act = np.any(available_actions[:, :, 1:] > 0, axis=-1)
         return can_act.astype(np.float32)[..., None]
+
+    def _team_rewards_from_infos(self, infos, rewards):
+        """Return team rewards for EP critics even when actor rewards are reallocated."""
+        team_rewards = np.zeros((len(infos), 1), dtype=np.float32)
+        for thread_id, thread_infos in enumerate(infos):
+            info = thread_infos[0] if thread_infos else {}
+            if "team_reward" in info:
+                team_rewards[thread_id, 0] = float(info["team_reward"])
+            else:
+                team_rewards[thread_id, 0] = float(np.mean(rewards[thread_id]))
+        return team_rewards
+
+    def _actor_credit_from_infos(self, infos, agent_id):
+        """Build an optional per-agent auxiliary credit signal for actor advantages.
+
+        This is off by default. It is intended for turn-based Sokoban experiments
+        where only one active agent actually changes the environment at each step.
+        """
+        mode = self.env_args.get("actor_credit_mode", "none")
+        coef = float(self.env_args.get("actor_credit_coef", 0.0) or 0.0)
+        credits = np.zeros((len(infos), 1), dtype=np.float32)
+        if coef == 0.0 or mode in (None, "none"):
+            return credits
+
+        for thread_id, thread_infos in enumerate(infos):
+            info = thread_infos[0] if thread_infos else {}
+            if int(info.get("chosen_agent", -1)) != agent_id:
+                continue
+            if mode == "active_reward":
+                credit = float(info.get("team_reward", info.get("step_reward", 0.0)))
+            elif mode == "active_progress":
+                credit = 0.0
+                credit += max(float(info.get("base_reward", 0.0)), 0.0)
+                credit += max(float(info.get("useful_push_distance_delta", 0.0)), 0.0)
+                credit += max(
+                    float(info.get("agent_box_distance_shaping_reward", 0.0)), 0.0
+                )
+                if bool(info.get("action_moved_box", False)):
+                    credit += 0.2
+            else:
+                raise ValueError(
+                    "Unknown actor_credit_mode "
+                    f"{mode!r}; expected none, active_reward, or active_progress."
+                )
+            credits[thread_id, 0] = credit
+        return credits
 
     @torch.no_grad()
     def compute(self):

@@ -20,6 +20,8 @@ useful_push_shaping_weight: 0.0
 shaping_unreachable_distance: ~
 box_target_distance_mode: reverse_push
 agent_box_distance_mode: useful
+actor_credit_mode: none
+actor_credit_coef: 0.0
 reset_retry_limit: 20
 max_steps: ~
 dim_room: ~

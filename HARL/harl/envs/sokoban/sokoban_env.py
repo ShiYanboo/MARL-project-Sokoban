@@ -187,6 +187,7 @@ class SokobanEnv:
             "steps_used": int(getattr(self.env, "num_env_steps", 0)),
             "max_steps": int(getattr(self.env, "max_steps", 0)),
             "step_reward": reward,
+            "team_reward": reward,
             "base_reward": base_reward,
             "shaping_reward": shaping["total"],
             "distance_shaping_reward": shaping["distance"],

@@ -85,13 +85,13 @@
 
 ## happo13 current 5m partial
 ### 13 baseline
-- happo13-baseline-original: partial, step 4560000/5000000, `results/happo13-baseline-original/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_baseline_original_5m/happo13-baseline-original-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-42-50`
+- happo13-baseline-original: complete, step 4800000/5000000, `results/happo13-baseline-original/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_baseline_original_5m/happo13-baseline-original-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-42-50`
 
 ### 13 noshape
-- happo13-v1-noshape: partial, step 4560000/5000000, `results/happo13-v1-noshape/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_v1_noshape_5m/happo13-v1-noshape-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-43-34`
+- happo13-v1-noshape: complete, step 4800000/5000000, `results/happo13-v1-noshape/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_v1_noshape_5m/happo13-v1-noshape-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-43-34`
 
 ### 13 nodl-nopush
-- happo13-v1-nodl-nopush: partial, step 4320000/5000000, `results/happo13-v1-nodl-nopush/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_v1_nodl_nopush_5m/happo13-v1-nodl-nopush-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-45-24`
+- happo13-v1-nodl-nopush: complete, step 4800000/5000000, `results/happo13-v1-nodl-nopush/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_v1_nodl_nopush_5m/happo13-v1-nodl-nopush-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-45-24`
 
 ### 13 gru noact
 - happo13-gru-noaction: complete, step 4800000/5000000, `results/happo13-gru-noaction/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_noaction_5m/happo13-gru-noaction-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-46-02`
@@ -103,37 +103,37 @@
 - happo13-gru-1action: complete, step 4800000/5000000, `results/happo13-gru-1action/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_1action_5m/happo13-gru-1action-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-47-00`
 
 ### 13 cnn
-- happo13-cnn-nodl-nopush: partial, step 4080000/5000000, `results/happo13-cnn-nodl-nopush/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_cnn_nodl_nopush_5m/happo13-cnn-nodl-nopush-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-47-27`
+- happo13-cnn-nodl-nopush: complete, step 4800000/5000000, `results/happo13-cnn-nodl-nopush/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_cnn_nodl_nopush_5m/happo13-cnn-nodl-nopush-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-47-27`
 
 ## mix completed rounds only
 ### v1 strongpot mix
 - happo-shaped-strongpot-mixv012-r1: complete, step 4800000/5000000, `results/happo-shaped-strongpot-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_strongpot_mixv012_r1/happo-shaped-strongpot-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-25-19-37-53`
 - happo-shaped-strongpot-mixv012-r2: complete, step 4800000/5000000, `results/happo-shaped-strongpot-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_strongpot_mixv012_r2/happo-shaped-strongpot-mixv012-r2-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-02-48-18`
 - happo-shaped-strongpot-mixv012-r3: complete, step 4800000/5000000, `results/happo-shaped-strongpot-mixv012-r3/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_strongpot_mixv012_r3/happo-shaped-strongpot-mixv012-r3-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-08-05-42`
-- happo-shaped-strongpot-mixv012-r4: partial, step 2880000/5000000, `results/happo-shaped-strongpot-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_strongpot_mixv012_r4/happo-shaped-strongpot-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-14-34`
+- happo-shaped-strongpot-mixv012-r4: complete, step 4800000/5000000, `results/happo-shaped-strongpot-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_strongpot_mixv012_r4/happo-shaped-strongpot-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-14-34`
 
 ### v1 nodeadlock mix
 - happo-shaped-nodeadlock-mixv012-r1: complete, step 4800000/5000000, `results/happo-shaped-nodeadlock-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodeadlock_mixv012_r1/happo-shaped-nodeadlock-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-25-19-19-07`
 - happo-shaped-nodeadlock-mixv012-r2: complete, step 4800000/5000000, `results/happo-shaped-nodeadlock-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodeadlock_mixv012_r2/happo-shaped-nodeadlock-mixv012-r2-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-02-35-56`
 - happo-shaped-nodeadlock-mixv012-r3: complete, step 4800000/5000000, `results/happo-shaped-nodeadlock-mixv012-r3/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodeadlock_mixv012_r3/happo-shaped-nodeadlock-mixv012-r3-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-07-51-11`
-- happo-shaped-nodeadlock-mixv012-r4: partial, step 3360000/5000000, `results/happo-shaped-nodeadlock-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodeadlock_mixv012_r4/happo-shaped-nodeadlock-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-13-45-49`
+- happo-shaped-nodeadlock-mixv012-r4: complete, step 4800000/5000000, `results/happo-shaped-nodeadlock-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodeadlock_mixv012_r4/happo-shaped-nodeadlock-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-13-45-49`
 
 ### v1 nodl-nopush mix
 - happo-shaped-nodl-nopush-mixv012-r1: complete, step 4800000/5000000, `results/happo-shaped-nodl-nopush-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodl_nopush_mixv012_r1/happo-shaped-nodl-nopush-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-25-19-45-07`
 - happo-shaped-nodl-nopush-mixv012-r2: complete, step 4800000/5000000, `results/happo-shaped-nodl-nopush-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodl_nopush_mixv012_r2/happo-shaped-nodl-nopush-mixv012-r2-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-02-58-33`
 - happo-shaped-nodl-nopush-mixv012-r3: complete, step 4800000/5000000, `results/happo-shaped-nodl-nopush-mixv012-r3/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodl_nopush_mixv012_r3/happo-shaped-nodl-nopush-mixv012-r3-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-08-21-31`
-- happo-shaped-nodl-nopush-mixv012-r4: partial, step 2640000/5000000, `results/happo-shaped-nodl-nopush-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodl_nopush_mixv012_r4/happo-shaped-nodl-nopush-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-31-40`
+- happo-shaped-nodl-nopush-mixv012-r4: complete, step 4800000/5000000, `results/happo-shaped-nodl-nopush-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_nodl_nopush_mixv012_r4/happo-shaped-nodl-nopush-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-31-40`
 
 ### v1 noshape mix
 - happo-shaped-noshape-mixv012-r1: complete, step 4800000/5000000, `results/happo-shaped-noshape-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_unshaped_mixv012_r1/happo-shaped-noshape-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-25-19-22-03`
 - happo-shaped-noshape-mixv012-r2: complete, step 4800000/5000000, `results/happo-shaped-noshape-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_unshaped_mixv012_r2/happo-shaped-noshape-mixv012-r2-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-02-24-43`
 - happo-shaped-noshape-mixv012-r3: complete, step 4800000/5000000, `results/happo-shaped-noshape-mixv012-r3/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_unshaped_mixv012_r3/happo-shaped-noshape-mixv012-r3-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-07-24-04`
-- happo-shaped-noshape-mixv012-r4: partial, step 3840000/5000000, `results/happo-shaped-noshape-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_unshaped_mixv012_r4/happo-shaped-noshape-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-13-18-17`
+- happo-shaped-noshape-mixv012-r4: complete, step 4800000/5000000, `results/happo-shaped-noshape-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_unshaped_mixv012_r4/happo-shaped-noshape-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-13-18-17`
 
 ### v2 cap12 mix
 - happo-shaped-v2-cap12-mixv012-r1: complete, step 4992000/5000000, `results/happo-shaped-v2-cap12-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_v2_conservative_cap12_mixv012_r1/happo-shaped-v2-cap12-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-08-15-39`
-- happo-shaped-v2-cap12-mixv012-r2: partial, step 3840000/5000000, `results/happo-shaped-v2-cap12-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_v2_conservative_cap12_mixv012_r2/happo-shaped-v2-cap12-mixv012-r2-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-13-45-46`
+- happo-shaped-v2-cap12-mixv012-r2: complete, step 4992000/5000000, `results/happo-shaped-v2-cap12-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_shaped_v2_conservative_cap12_mixv012_r2/happo-shaped-v2-cap12-mixv012-r2-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-13-45-46`
 
 ### gru hist8 mix
 - happo-rnn-bfs-nodl-nopush-mixv012-r1: complete, step 4800000/5000000, `results/happo-rnn-bfs-nodl-nopush-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_rnn_mixv012_r1/happo-rnn-bfs-nodl-nopush-mixv012-r1-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-09-37-47`
-- happo-rnn-bfs-nodl-nopush-mixv012-r2: partial, step 2400000/5000000, `results/happo-rnn-bfs-nodl-nopush-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_rnn_mixv012_r2/happo-rnn-bfs-nodl-nopush-mixv012-r2-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-15-21-28`
+- happo-rnn-bfs-nodl-nopush-mixv012-r2: complete, step 4800000/5000000, `results/happo-rnn-bfs-nodl-nopush-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_rnn_mixv012_r2/happo-rnn-bfs-nodl-nopush-mixv012-r2-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-15-21-28`

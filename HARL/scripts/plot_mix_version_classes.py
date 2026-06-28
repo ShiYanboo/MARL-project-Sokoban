@@ -13,14 +13,14 @@ from plot_sokoban_metrics import load_event_files, load_summary, smooth
 
 
 METRICS = [
-    ("sokoban/eval_success_rate", "eval success rate"),
-    ("sokoban/eval_box_completion_ratio", "eval box completion ratio"),
-    ("sokoban/eval_final_boxes_on_target", "eval boxes on target"),
     ("sokoban/train_success_rate", "train success rate"),
+    ("sokoban/eval_success_rate", "eval success rate"),
     ("sokoban/train_box_completion_ratio", "train box completion ratio"),
-    ("eval_average_episode_rewards", "eval episode reward"),
-    ("train_episode_rewards/aver_rewards", "train episode reward"),
+    ("sokoban/eval_box_completion_ratio", "eval box completion ratio"),
+    ("sokoban/train_mean_base_reward", "train base reward / step"),
+    ("sokoban/eval_mean_base_reward", "eval base reward / step"),
     ("critic/value_loss", "critic value loss"),
+    ("eval_average_episode_rewards", "eval episode reward"),
 ]
 
 

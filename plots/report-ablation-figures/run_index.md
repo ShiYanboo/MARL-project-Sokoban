@@ -2,6 +2,7 @@
 
 Figure labels use `clip5/clip12` for report wording, but these correspond to the earlier distance-cap ablations.
 Missing or partial segments are recorded below; figures use whatever scalar event data is present.
+Each figure is cropped to the shortest available curve among the plotted series, and non-main figures shorter than 40M env steps use a compact width.
 
 Skipped: requested HAHyPO architecture comparison with `gru0 + alpha=0.2` is not generated because run17 HAHyPO GRU experiments used GRU-8/action-history-8, not GRU-0.
 Skipped: useless-action figure is intentionally left out until those long runs produce enough data.

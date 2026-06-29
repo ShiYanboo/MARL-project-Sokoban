@@ -202,6 +202,7 @@ FIGURES = [
     {
         "filename": "01_main_train_success_box_ratio.png",
         "title": "7x7 v0 pretrain + pseudo-mix: main comparison",
+        "keep_full_width": True,
         "families": {
             "baseline": "baseline",
             "v1-nopush-nodl": "v1-nodl-nopush",
@@ -555,6 +556,16 @@ def chain_series(results_root, chain, metrics):
     return {metric: sorted(points) for metric, points in by_metric.items()}, index_entries
 
 
+def maybe_shrink_figsize(figure, common_max_step):
+    """Use compact width for short ablation figures, while keeping the main figure wide."""
+    width, height = figure["figsize"]
+    if figure.get("keep_full_width"):
+        return width, height
+    if common_max_step is not None and common_max_step < 40 * M:
+        return max(width * 0.5, 7.0), height
+    return width, height
+
+
 def plot_panel(axis, results_root, families, metric, smoothing, max_step=None, boundary=None):
     plotted = False
     used = {}
@@ -570,8 +581,10 @@ def plot_panel(axis, results_root, families, metric, smoothing, max_step=None, b
         values = [value for _, value in points]
         axis.plot(steps, smooth(values, smoothing), linewidth=2.0, label=label)
         plotted = True
-    if boundary is not None:
+    if boundary is not None and (max_step is None or boundary <= max_step):
         axis.axvline(boundary / M, color="black", alpha=0.25, linestyle="--", linewidth=1.2)
+    if max_step is not None and max_step > 0:
+        axis.set_xlim(0, max_step / M)
     axis.set_title(METRIC_TITLES.get(metric, metric))
     axis.set_xlabel("stitched env steps (M)")
     axis.grid(alpha=0.3)
@@ -580,9 +593,29 @@ def plot_panel(axis, results_root, families, metric, smoothing, max_step=None, b
     return plotted, used
 
 
+def shortest_max_step_for_standard(results_root, figure):
+    max_steps = []
+    for metric in figure["metrics"]:
+        for chain_name in figure["families"].values():
+            points_by_metric, _ = chain_series(results_root, CHAINS[chain_name], [metric])
+            points = points_by_metric.get(metric, [])
+            if points:
+                max_steps.append(max(step for step, _ in points))
+    configured_max = figure.get("max_step")
+    if configured_max is not None:
+        max_steps.append(configured_max)
+    return min(max_steps) if max_steps else configured_max
+
+
 def plot_standard_figure(results_root, figure, output_path, smoothing):
     rows, cols = figure["layout"]
-    fig, axes = plt.subplots(rows, cols, figsize=figure["figsize"], squeeze=False)
+    common_max = shortest_max_step_for_standard(results_root, figure)
+    fig, axes = plt.subplots(
+        rows,
+        cols,
+        figsize=maybe_shrink_figsize(figure, common_max),
+        squeeze=False,
+    )
     all_used = {}
     any_plotted = False
     for axis, metric in zip(axes.flat, figure["metrics"]):
@@ -592,7 +625,7 @@ def plot_standard_figure(results_root, figure, output_path, smoothing):
             figure["families"],
             metric,
             smoothing,
-            max_step=figure.get("max_step"),
+            max_step=common_max,
             boundary=figure.get("boundary"),
         )
         any_plotted = any_plotted or plotted
@@ -621,10 +654,15 @@ def shortest_max_step(results_root, panels):
 
 def plot_multi_panel_figure(results_root, figure, output_path, smoothing):
     panels = figure["panels"]
-    fig, axes = plt.subplots(len(panels), 1, figsize=figure["figsize"], squeeze=False)
     all_used = {}
     any_plotted = False
     common_max = shortest_max_step(results_root, panels)
+    fig, axes = plt.subplots(
+        len(panels),
+        1,
+        figsize=maybe_shrink_figsize(figure, common_max),
+        squeeze=False,
+    )
     for axis, panel in zip(axes.flat, panels):
         plotted, used = plot_panel(
             axis,
@@ -653,6 +691,7 @@ def write_index(output_dir, generated, used_by_figure):
         "",
         "Figure labels use `clip5/clip12` for report wording, but these correspond to the earlier distance-cap ablations.",
         "Missing or partial segments are recorded below; figures use whatever scalar event data is present.",
+        "Each figure is cropped to the shortest available curve among the plotted series, and non-main figures shorter than 40M env steps use a compact width.",
         "",
         "Skipped: requested HAHyPO architecture comparison with `gru0 + alpha=0.2` is not generated because run17 HAHyPO GRU experiments used GRU-8/action-history-8, not GRU-0.",
         "Skipped: useless-action figure is intentionally left out until those long runs produce enough data.",

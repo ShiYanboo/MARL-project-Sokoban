@@ -31,8 +31,8 @@ The dashed vertical line marks the planned 20M pretrain/mix boundary.
 - happo-rnn-bfs-nodl-nopush-nohist-resume20m: `results/happo-rnn-bfs-nodl-nopush-nohist-resume20m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_gru_nohist_resume20m/happo-rnn-bfs-nodl-nopush-nohist-resume20m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-21-24-18`
 - happo-rnn-bfs-nodl-nopush-nohist-mixv012-r1: `results/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_gru_nohist_mixv012_r1/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-02-59-23`
 - happo-rnn-bfs-nodl-nopush-nohist-mixv012-r2: `results/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_gru_nohist_mixv012_r2/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r2-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-08-11-50`
-- happo-rnn-bfs-nodl-nopush-nohist-mixv012-r3: missing
-- happo-rnn-bfs-nodl-nopush-nohist-mixv012-r4: missing
+- happo-rnn-bfs-nodl-nopush-nohist-mixv012-r3: `results/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r3/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_gru_nohist_mixv012_r3/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r3-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-15-06-46`
+- happo-rnn-bfs-nodl-nopush-nohist-mixv012-r4: `results/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r4/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_gru_nohist_mixv012_r4/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r4-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-23-55-40`
 
 ### gru1 one-action-history
 - happo-rnn-bfs-nodl-nopush-hist1-thr32: `results/happo-rnn-bfs-nodl-nopush-hist1-thr32/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_gru_hist1_thr32/happo-rnn-bfs-nodl-nopush-hist1-thr32-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-14-00-02`
@@ -101,7 +101,7 @@ The dashed vertical line marks the planned 20M pretrain/mix boundary.
 - happo13-gru-1action-resume15m: `results/happo13-gru-1action-resume15m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_1action_resume15m/happo13-gru-1action-resume15m-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-22-12-07`
 - happo13-gru-1action-resume20m: `results/happo13-gru-1action-resume20m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_1action_resume20m/happo13-gru-1action-resume20m-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-02-20-28`
 - happo13-gru-1action-mixv012-r1: `results/happo13-gru-1action-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_1action_mixv012-r1/happo13-gru-1action-mixv012-r1-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-05-49-42`
-- happo13-gru-1action-mixv012-r2: missing
+- happo13-gru-1action-mixv012-r2: `results/happo13-gru-1action-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_1action_mixv012-r2/happo13-gru-1action-mixv012-r2-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-29-05-39-34`
 - happo13-gru-1action-mixv012-r3: missing
 - happo13-gru-1action-mixv012-r4: missing
 
@@ -111,7 +111,7 @@ The dashed vertical line marks the planned 20M pretrain/mix boundary.
 - happo13-gru-8action-resume15m: `results/happo13-gru-8action-resume15m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_8action_resume15m/happo13-gru-8action-resume15m-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-26-22-11-56`
 - happo13-gru-8action-resume20m: `results/happo13-gru-8action-resume20m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_8action_resume20m/happo13-gru-8action-resume20m-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-02-23-35`
 - happo13-gru-8action-mixv012-r1: `results/happo13-gru-8action-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_8action_mixv012-r1/happo13-gru-8action-mixv012-r1-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-06-00-36`
-- happo13-gru-8action-mixv012-r2: missing
+- happo13-gru-8action-mixv012-r2: `results/happo13-gru-8action-mixv012-r2/sokoban/TwoPlayer-Sokoban-v0/happo/happo_padding13_gru_8action_mixv012-r2/happo13-gru-8action-mixv012-r2-steps5000000-len150-env4-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-29-04-16-16`
 - happo13-gru-8action-mixv012-r3: missing
 - happo13-gru-8action-mixv012-r4: missing
 
@@ -129,9 +129,9 @@ The dashed vertical line marks the planned 20M pretrain/mix boundary.
 ### 13tl baseline original
 - happo13tl-baseline-original: `results/happo13tl-baseline-original/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_baseline_original_5m/happo13tl-baseline-original-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-05-52-28`
 - happo13tl-baseline-original-resume10m: `results/happo13tl-baseline-original-resume10m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_baseline_original_resume10m/happo13tl-baseline-original-resume10m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-08-17-30`
-- happo13tl-baseline-original-resume15m: missing
-- happo13tl-baseline-original-resume20m: missing
-- happo13tl-baseline-original-mixv012-r1: missing
+- happo13tl-baseline-original-resume15m: `results/happo13tl-baseline-original-resume15m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_baseline_original_resume15m/happo13tl-baseline-original-resume15m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-12-13-34`
+- happo13tl-baseline-original-resume20m: `results/happo13tl-baseline-original-resume20m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_baseline_original_resume20m/happo13tl-baseline-original-resume20m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-16-30-15`
+- happo13tl-baseline-original-mixv012-r1: `results/happo13tl-baseline-original-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_baseline_original_mixv012-r1/happo13tl-baseline-original-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-22-13-48`
 - happo13tl-baseline-original-mixv012-r2: missing
 - happo13tl-baseline-original-mixv012-r3: missing
 - happo13tl-baseline-original-mixv012-r4: missing
@@ -139,9 +139,9 @@ The dashed vertical line marks the planned 20M pretrain/mix boundary.
 ### 13tl v1 nodl-nopush
 - happo13tl-v1-nodl-nopush: `results/happo13tl-v1-nodl-nopush/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_v1_nodl_nopush_5m/happo13tl-v1-nodl-nopush-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-05-53-14`
 - happo13tl-v1-nodl-nopush-resume10m: `results/happo13tl-v1-nodl-nopush-resume10m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_v1_nodl_nopush_resume10m/happo13tl-v1-nodl-nopush-resume10m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-08-17-30`
-- happo13tl-v1-nodl-nopush-resume15m: missing
-- happo13tl-v1-nodl-nopush-resume20m: missing
-- happo13tl-v1-nodl-nopush-mixv012-r1: missing
+- happo13tl-v1-nodl-nopush-resume15m: `results/happo13tl-v1-nodl-nopush-resume15m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_v1_nodl_nopush_resume15m/happo13tl-v1-nodl-nopush-resume15m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-12-24-25`
+- happo13tl-v1-nodl-nopush-resume20m: `results/happo13tl-v1-nodl-nopush-resume20m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_v1_nodl_nopush_resume20m/happo13tl-v1-nodl-nopush-resume20m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-16-53-32`
+- happo13tl-v1-nodl-nopush-mixv012-r1: `results/happo13tl-v1-nodl-nopush-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_v1_nodl_nopush_mixv012-r1/happo13tl-v1-nodl-nopush-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-23-02-02`
 - happo13tl-v1-nodl-nopush-mixv012-r2: missing
 - happo13tl-v1-nodl-nopush-mixv012-r3: missing
 - happo13tl-v1-nodl-nopush-mixv012-r4: missing
@@ -149,9 +149,9 @@ The dashed vertical line marks the planned 20M pretrain/mix boundary.
 ### 13tl gru0 no-action-history
 - happo13tl-gru-noaction: `results/happo13tl-gru-noaction/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_noaction_5m/happo13tl-gru-noaction-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-05-53-29`
 - happo13tl-gru-noaction-resume10m: `results/happo13tl-gru-noaction-resume10m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_noaction_resume10m/happo13tl-gru-noaction-resume10m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-08-17-30`
-- happo13tl-gru-noaction-resume15m: missing
-- happo13tl-gru-noaction-resume20m: missing
-- happo13tl-gru-noaction-mixv012-r1: missing
+- happo13tl-gru-noaction-resume15m: `results/happo13tl-gru-noaction-resume15m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_noaction_resume15m/happo13tl-gru-noaction-resume15m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-12-09-20`
+- happo13tl-gru-noaction-resume20m: `results/happo13tl-gru-noaction-resume20m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_noaction_resume20m/happo13tl-gru-noaction-resume20m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-16-42-18`
+- happo13tl-gru-noaction-mixv012-r1: `results/happo13tl-gru-noaction-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_noaction_mixv012-r1/happo13tl-gru-noaction-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-21-43-36`
 - happo13tl-gru-noaction-mixv012-r2: missing
 - happo13tl-gru-noaction-mixv012-r3: missing
 - happo13tl-gru-noaction-mixv012-r4: missing
@@ -159,9 +159,9 @@ The dashed vertical line marks the planned 20M pretrain/mix boundary.
 ### 13tl gru1 one-action-history
 - happo13tl-gru-1action: `results/happo13tl-gru-1action/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_1action_5m/happo13tl-gru-1action-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-05-54-02`
 - happo13tl-gru-1action-resume10m: `results/happo13tl-gru-1action-resume10m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_1action_resume10m/happo13tl-gru-1action-resume10m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-08-17-30`
-- happo13tl-gru-1action-resume15m: missing
-- happo13tl-gru-1action-resume20m: missing
-- happo13tl-gru-1action-mixv012-r1: missing
+- happo13tl-gru-1action-resume15m: `results/happo13tl-gru-1action-resume15m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_1action_resume15m/happo13tl-gru-1action-resume15m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-12-19-15`
+- happo13tl-gru-1action-resume20m: `results/happo13tl-gru-1action-resume20m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_1action_resume20m/happo13tl-gru-1action-resume20m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-16-41-03`
+- happo13tl-gru-1action-mixv012-r1: `results/happo13tl-gru-1action-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_1action_mixv012-r1/happo13tl-gru-1action-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-21-39-57`
 - happo13tl-gru-1action-mixv012-r2: missing
 - happo13tl-gru-1action-mixv012-r3: missing
 - happo13tl-gru-1action-mixv012-r4: missing
@@ -169,9 +169,9 @@ The dashed vertical line marks the planned 20M pretrain/mix boundary.
 ### 13tl gru8 eight-action-history
 - happo13tl-gru-8action: `results/happo13tl-gru-8action/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_8action_5m/happo13tl-gru-8action-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-27-05-53-41`
 - happo13tl-gru-8action-resume10m: `results/happo13tl-gru-8action-resume10m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_8action_resume10m/happo13tl-gru-8action-resume10m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-08-17-30`
-- happo13tl-gru-8action-resume15m: missing
-- happo13tl-gru-8action-resume20m: missing
-- happo13tl-gru-8action-mixv012-r1: missing
+- happo13tl-gru-8action-resume15m: `results/happo13tl-gru-8action-resume15m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_8action_resume15m/happo13tl-gru-8action-resume15m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-12-12-58`
+- happo13tl-gru-8action-resume20m: `results/happo13tl-gru-8action-resume20m/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_8action_resume20m/happo13tl-gru-8action-resume20m-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-16-39-17`
+- happo13tl-gru-8action-mixv012-r1: `results/happo13tl-gru-8action-mixv012-r1/sokoban/TwoPlayer-Sokoban-v0/happo/happo_top_left13_gru_8action_mixv012-r1/happo13tl-gru-8action-mixv012-r1-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-21-38-57`
 - happo13tl-gru-8action-mixv012-r2: missing
 - happo13tl-gru-8action-mixv012-r3: missing
 - happo13tl-gru-8action-mixv012-r4: missing

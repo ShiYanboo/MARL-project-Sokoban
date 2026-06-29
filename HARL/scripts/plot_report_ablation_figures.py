@@ -448,6 +448,20 @@ FIGURES = [
         "layout": (2, 1),
         "figsize": (14, 7),
     },
+    {
+        "filename": "17_v2_clip12_baseline_v1_train_success_30m.png",
+        "title": "7x7 train success rate comparison, first 30M steps",
+        "families": {
+            "baseline": "baseline",
+            "v1-nopush-nodl": "v1-nodl-nopush",
+            "v2-clip12": "v2-clip12",
+        },
+        "metrics": ["sokoban/train_success_rate"],
+        "layout": (1, 1),
+        "figsize": (14, 4.2),
+        "max_step": 30 * M,
+        "boundary": 20 * M,
+    },
 ]
 
 

@@ -383,6 +383,7 @@ FIGURES = [
     {
         "filename": "13_13tl_supp_metrics.png",
         "title": "13x13 top-left padding: supplementary metrics",
+        "keep_full_width": True,
         "families": {
             "v1-nopush-nodl": "13tl-v1-nodl-nopush",
             "gru0": "13tl-gru0",
@@ -417,6 +418,7 @@ FIGURES = [
     {
         "filename": "15_13random_value_reward.png",
         "title": "13x13 random padding: value and reward",
+        "keep_full_width": True,
         "families": {
             "gru0": "13random-gru0",
             "baseline": "13random-baseline",

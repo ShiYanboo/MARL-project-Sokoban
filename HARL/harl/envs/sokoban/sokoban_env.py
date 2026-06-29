@@ -60,6 +60,11 @@ class SokobanEnv:
         self.use_reward_shaping = bool(
             self.args.get("use_reward_shaping", False)
         )
+        self.useless_action_penalty = (
+            float(self.args.get("useless_action_penalty", 0.0) or 0.0)
+            if self.use_reward_shaping
+            else 0.0
+        )
         self.reward_shaper = SokobanRewardShaper(
             distance_weight=(
                 self.args.get("distance_shaping_weight", 0.05)
@@ -143,6 +148,9 @@ class SokobanEnv:
         actions = np.asarray(actions).reshape(self.n_agents, -1)
         discrete_actions = [int(np.asarray(action).item()) for action in actions]
         chosen_agent, env_action, resolution_info = self._resolve_action(discrete_actions)
+        useless_action = self._classify_useless_action(
+            chosen_agent, discrete_actions, resolution_info
+        )
 
         before_state = (
             self.reward_shaper.snapshot(self.env)
@@ -156,6 +164,8 @@ class SokobanEnv:
             shaping = self.reward_shaper.evaluate_transition(before_state, after_state)
         else:
             shaping = self.reward_shaper.empty_result()
+        useless_action_penalty = self._useless_action_penalty(useless_action)
+        shaping["total"] += useless_action_penalty
         reward = base_reward + shaping["total"]
         self._record_action_history(
             self._executed_joint_actions(chosen_agent, env_action, discrete_actions)
@@ -195,6 +205,7 @@ class SokobanEnv:
             "deadlock_shaping_reward": shaping["deadlock"],
             "agent_box_distance_shaping_reward": shaping["agent_box_distance"],
             "useful_push_shaping_reward": shaping["useful_push"],
+            "useless_action_penalty": useless_action_penalty,
             "box_target_distance": shaping["box_target_distance_after"],
             "pushability": shaping["pushability_after"],
             "deadlocked_boxes": shaping["deadlocked_boxes"],
@@ -202,6 +213,8 @@ class SokobanEnv:
             "agent_box_distance": shaping["agent_box_distance_after"],
             "useful_push_applied": shaping["useful_push_applied"],
             "useful_push_distance_delta": shaping["useful_push_distance_delta"],
+            "useless_action": useless_action["is_useless"],
+            "useless_action_reason": useless_action["reason"],
             "action_moved_player": bool(env_info.get("action.moved_player", False)),
             "action_moved_box": bool(env_info.get("action.moved_box", False)),
             **env_info,
@@ -345,6 +358,73 @@ class SokobanEnv:
         if chosen_agent == 0:
             return chosen_agent, action, resolution_info
         return chosen_agent, action + 8, resolution_info
+
+    def _classify_useless_action(self, chosen_agent, actions, resolution_info):
+        result = {"is_useless": False, "reason": "none"}
+        if self.useless_action_penalty <= 0.0:
+            return result
+        if resolution_info.get("invalid_action_attempt", False):
+            return {"is_useless": True, "reason": "inactive_agent_nonnoop"}
+        if chosen_agent not in range(self.n_agents):
+            return result
+
+        action = int(actions[chosen_agent])
+        if action == 0:
+            if not self._agent_adjacent_to_box(chosen_agent):
+                return {"is_useless": True, "reason": "noop_far_from_box"}
+            return result
+
+        direction = (action - 1) % 4
+        target_cell = self._neighbor_position(
+            self.env.player_positions[chosen_agent], direction
+        )
+        if not self._in_bounds(target_cell):
+            return {"is_useless": True, "reason": "out_of_bounds"}
+
+        cell_value = int(self.env.room_state[target_cell[0], target_cell[1]])
+        is_push_action = 1 <= action <= 4
+        if is_push_action:
+            if cell_value not in {3, 4}:
+                if cell_value in {1, 2}:
+                    return result
+                return {"is_useless": True, "reason": "push_degraded_move_blocked"}
+            box_target = self._neighbor_position(target_cell, direction)
+            if not self._in_bounds(box_target):
+                return {"is_useless": True, "reason": "push_box_out_of_bounds"}
+            box_target_value = int(self.env.room_state[box_target[0], box_target[1]])
+            if box_target_value not in {1, 2}:
+                return {"is_useless": True, "reason": "push_box_blocked"}
+            return result
+
+        if cell_value not in {1, 2}:
+            return {"is_useless": True, "reason": "move_blocked"}
+        return result
+
+    def _useless_action_penalty(self, useless_action):
+        if not useless_action["is_useless"]:
+            return 0.0
+        return -float(self.useless_action_penalty)
+
+    def _agent_adjacent_to_box(self, agent_id):
+        position = self.env.player_positions[agent_id]
+        for direction in range(4):
+            neighbor = self._neighbor_position(position, direction)
+            if (
+                self._in_bounds(neighbor)
+                and self.env.room_state[neighbor[0], neighbor[1]] in {3, 4}
+            ):
+                return True
+        return False
+
+    @staticmethod
+    def _neighbor_position(position, direction):
+        deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        delta = deltas[direction]
+        return np.asarray(position, dtype=np.int32) + np.asarray(delta, dtype=np.int32)
+
+    def _in_bounds(self, position):
+        rows, cols = self.env.room_state.shape
+        return 0 <= position[0] < rows and 0 <= position[1] < cols
 
     def _reset_env(self):
         last_error = None

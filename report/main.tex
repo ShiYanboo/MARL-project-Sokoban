@@ -108,7 +108,7 @@ def _resolve_action(self, actions):
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.95\textwidth]{figures/fig1_main_train_success_box_ratio.png}
-\caption{7x7、2 boxes 固定环境下的主线长跑结果，比较 HAPPO baseline 与若干轻量塑形/架构变体。曲线显示各方案均能脱离随机策略并持续上升；其中去掉 deadlock 与 pushability 负项的 \code{v1-nodl-nopush} 收敛最稳、波动最小，是当前实现中最稳的 baseline。}
+\caption{7x7、2 boxes 固定环境下的主线长跑结果，比较 HAPPO baseline 与若干轻量塑形/架构变体。曲线显示各方案均能脱离随机策略并持续上升；其中去掉 deadlock 与 pushability 负项的 \code{v1-nodl-nopush} 与 \code{gru0} 收敛最稳、波动最小，我们将后者作为提交的最终模型，而将前者置为大量消融实验中对比的基线。}
 \label{fig:old7x7}
 \end{figure*}
 
@@ -226,7 +226,7 @@ def pushability_potential(state):
 \end{align}
 其中 $\Delta P_t=P_{t+1}-P_t$，$\Delta L_t=L_{t+1}-L_t$；$I^{inv}_t$ 表示非法 push 或撞墙移动，$I^{useless}_t$ 表示远离箱子时 \code{noop} 或动作后状态无变化。主线 \code{v1-nodl-nopush} 使用 v1 的距离势函数，参数为 $w_{bt}=0.20$、$w_{ab}=0.10$、$w_p=0$、$\lambda_{dl}=0$，并使用 \code{reward_finished=20}。v1 额外使用 $w_p=0.05$ 和 $\lambda_{dl}=0.8$；v2-clip12 使用 \code{reverse_push/useful} 距离并设置 unreachable distance cap 为 12。
 
-\subsection{信用分配与 Actor-Side Credit}
+\subsection{Credit Assignment and Actor-Side Credit}
 turn-based 机制下每步只有 active agent 真实影响环境，而环境奖励仍是团队共享，因此信用分配在本任务中是真实存在的问题。我们做了两层处理：active mask 保证 inactive agent 只有 \code{noop} 可选、其 actor buffer 中 active mask 为 0；在此基础上尝试 actor-side credit，即 critic 仍学习团队 reward，只在 active agent 的优势函数上叠加一个小型辅助信用项。
 
 \begin{lstlisting}[language=Python,caption={Actor-side credit 只改变 active actor 的优势函数，不改变 critic 目标。}]
@@ -241,7 +241,7 @@ A_actor = A_team + coef * credit
 
 需要说明的是，actor-side credit 目前并未给出决定性提升（见第 \ref{sec:credit} 节）：active mask 是必要基础，而额外的 actor 信用项更多是探索性尝试。
 
-\subsection{HAHyPO 与 GRPO-Style Advantage}
+\subsection{HAHyPO: GRPO-Style Advantage}
 除 HAPPO 外，我们实现了 HAHyPO 入口作为探索性变体。它保留 HAPPO 的 critic、GAE 与 clipped update，只改变 actor 使用的优势函数。动机来自 GRPO（Group Relative Policy Optimization）~\citep{shao2024deepseekmath}：GRPO 不依赖单独的 value model，而是在同一组样本内部用回报的相对高低构造优势。我们的 Sokoban 设置没有 prompt，但每次 rollout update 中存在多个并行环境轨迹，因此可以把同一 batch 内的 episode return 看成一个 group。记第 $i$ 条轨迹回报为 $R_i$，则 GRPO-style trajectory advantage 为：
 \begin{equation}
  A^{GRPO}_i=\frac{R_i-\mathrm{mean}_j(R_j)}{\mathrm{std}_j(R_j)+\epsilon}.
@@ -263,7 +263,7 @@ A^{actor}=(1-\alpha)\,\mathrm{zscore}(A^{GAE})+
 \begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig2_v2_success_ablation.png}
-\caption{v2 reverse-push distance 的 unreachable-distance cap 消融。cap=12 在短程内表现最好，说明对不可达距离做裁剪、控制塑形信号尺度十分重要。}
+\caption{v2 reverse-push distance 的 unreachable-distance cap 消融。\code{v2-clip12} 在短程内表现最好，说明对不可达距离做裁剪、控制塑形信号尺度十分重要。}
 \label{fig:v2clip}
 \end{figure}
 
@@ -295,7 +295,7 @@ A^{actor}=(1-\alpha)\,\mathrm{zscore}(A^{GAE})+
 
 \section{结果与分析}
 \subsection{主结果}
-图 \ref{fig:old7x7} 给出 7x7、2 boxes 固定环境下的主线长跑结果，比较对象集中在 HAPPO baseline 与 \code{v1-nodl-nopush}。结果表明，HAPPO 在该难度下可以明显脱离随机策略，训练成功率与 box completion ratio 在长程内持续上升。在所有轻量方案中，保留正向势函数、去掉 deadlock 与 pushability 负项的 \code{v1-nodl-nopush} 收敛最稳、波动最小。因此我们把 \code{v1-nodl-nopush} 作为当前实现中最稳的 baseline，并以它作为后续各项消融的统一参照。
+图 \ref{fig:old7x7} 给出 7x7、2 boxes 固定环境下的主线长跑结果，比较对象集中在 HAPPO baseline 与 \code{v1-nodl-nopush}。结果表明，HAPPO 在该难度下可以明显脱离随机策略，训练成功率与 box completion ratio 在长程内持续上升。在所有轻量方案中，保留正向势函数、去掉 deadlock 与 pushability 负项的 \code{v1-nodl-nopush} 收敛最稳、波动最小。因此我们把 \code{v1-nodl-nopush} 作为后续各项消融的统一参照。
 
 \begin{figure}[!tbp]
 \centering
@@ -310,14 +310,14 @@ A^{actor}=(1-\alpha)\,\mathrm{zscore}(A^{GAE})+
 \begin{figure}[!tbp]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig4_action_history_ablation.png}
-\caption{动作历史长度消融。显式输入动作历史并不稳定优于无历史，\code{gru-8} 不及 \code{gru-0}，\code{mlp-8} 也劣于 \code{gru-8}；提升更可能来自 GRU 的时序建模能力，而非动作历史本身。}
+\caption{动作历史长度消融。显式输入动作历史并不稳定优于无历史，\code{gru-8} 不及 \code{gru-0}，\code{mlp-8} 也劣于 \code{gru-8}。这说明 GRU 架构的时序建模能力能够使得效果提升，但显式增加动作输入并无益处。}
 \label{fig:history}
 \end{figure}
 
 \subsection{模型架构的影响}
 图 \ref{fig:arch7x7} 与图 \ref{fig:history} 围绕原始 7x7 实验比较模型架构。结果显示，GRU 效果最好；显式输入动作历史会让 GRU 性能下降；\code{mlp-8} 比 \code{gru-8} 更差，CNN 在 7x7 小地图上则不占优。
 
-对这一现象的解释口径如下：非 Markov 环境原则上可以通过把历史输入网络而被 Markov 化，因此从表示能力上并非完全做不到；但``可以表示''不等于``容易优化''，额外的历史输入会增大学习难度。因此 GRU 带来的提升更可能来自其时序建模能力本身，而不是来自动作历史这一额外输入。
+对这一现象的解释如下：带有动作历史的非 Markov 环境可以被 Markov 化，因此从表示能力上讲并无区别；引入动作序列有可能使得“理解另一智能体的行动逻辑”更为容易，但额外的历史输入会增大学习难度。在两者的trade-off中，历史动作序列的输入几乎没有影响或有负作用。通过图 \ref{fig:history}也可以看出， GRU 带来的提升更可能来自其时序建模能力本身，而不是来自动作历史这一额外输入。
 
 \subsection{Credit assignment}
 \label{sec:credit}
@@ -332,7 +332,7 @@ A^{actor}=(1-\alpha)\,\mathrm{zscore}(A^{GAE})+
 
 \subsection{HAHyPO}
 \label{sec:hahypo}
-图 \ref{fig:hahypo} 给出 HAHyPO 在 \code{v1-nodl-nopush} 上的 20M 对照。结果表明，引入 GRPO-style 优势并没有提升性能：小权重 $\alpha=0.2$ 基本跟随 HAPPO，$\alpha=0.5$ 明显偏弱，$\alpha=1.0$ 接近失败。其弱点在于轨迹级相对排序信号过粗，难以替代逐步 advantage。因此 HAHyPO 作为探索性方向可以保留，但不构成主线改进，也不应简单类比为``与语言模型一样有效''。
+图 \ref{fig:hahypo} 给出 HAHyPO 在 \code{v1-nodl-nopush} 上的 20M 对照。结果表明，引入 GRPO-style 优势并没有提升性能：小权重 $\alpha=0.2$ 基本跟随 HAPPO，$\alpha=0.5$ 明显偏弱，$\alpha=1.0$ 接近失败。其弱点在于轨迹级相对排序信号过粗，难以替代逐步 advantage，这与近期LLM RL回归PPO的观察相一致：PPO系列比GRPO系列优化更稳健，在智能体任务中这一特性更加突出。
 
 \begin{figure}[!tbp]
 \centering
@@ -355,7 +355,7 @@ A^{actor}=(1-\alpha)\,\mathrm{zscore}(A^{GAE})+
 \label{fig:random13}
 \end{figure}
 
-\textbf{\code{top-left padding}} 仍然困难，但 CNN 最优，其 train/eval success 与 eval box completion 都显著高于 MLP/GRU，这一结果显著体现了 CNN 的空间归纳偏置与平移不变性优势。一个值得强调的观察是：在原始等大输入实验中，曲线通常很快离开起始阶段，因此早期趋势对最终表现有较强指示；但在 13x13 top-left padding 中，训练会出现明显更长的平台期，random padding 的 warmup 平台可能更长。padding 并没有增加有效任务信息，只是扩大了观测维度和网络输入容量，模型仍需通过训练学会哪些位置是无信息的——对观察者而言，这相当于只能通过贝叶斯式的经验推断判断``某些输入区域不会带来信息''。因此，仅扩充输入规模或模型容量，即使不增加有效信息，也可能显著提高优化难度；容量提升通常需要与更丰富、更直接的训练信号匹配。这里只分析 20M 以内的平台期。
+\textbf{\code{top-left padding}} 仍然困难，但 CNN 最优，其 train/eval success 与 eval box completion 都显著高于 MLP/GRU，这一结果显著体现了 CNN 的空间归纳偏置与平移不变性优势。一个值得强调的观察是：在原始等大输入（7*7）实验中，曲线通常很快离开起始阶段，因此早期趋势对最终表现有较强指示；但在 13x13 top-left padding 中，训练会出现明显更长的平台期（大约$5e6$步），random padding 难以训练可能由于其 warmup 平台更长、甚至超过了我们设置的训练总步数。显然 top-left padding 并没有增加有效信息，只是扩大了网络输入容量，但模型仍需通过训练学会哪些位置是无信息的——对观察者而言，这相当于只能通过贝叶斯式的经验推断判断``某些输入区域不会带来信息''。因此，仅扩充输入规模即使不增加有效信息也可能显著提高优化难度；容量提升通常需要与更丰富、更优质的训练信号匹配。
 
 \begin{figure}[!tbp]
 \centering
@@ -388,19 +388,28 @@ GRU-8action & 0.00 & 0.075 & -14.81 \\
 \label{fig:distill}
 \end{figure}
 
-\subsection{无用动作惩罚项}
-作为行为先验的辅助分析，我们考察了无用动作惩罚项（对无效 push、撞墙移动、远离箱子时 \code{noop} 等施加小惩罚）。结果显示，该惩罚确实降低了 useless-action rate，并提高了 agent 的移动次数，说明奖励项改变了底层行为分布，使 agent 从``不动/浪费动作''转向更多行动。但其成功率与箱子到位率没有超过 \code{v1-nodl-nopush}，长程潜力反而较弱。这说明限制性能的主要因素并不是``没有合理动作''或``动作不够活跃''，而是推箱方向选择、长期规划与避免不可逆的错误 push。因此，无用动作惩罚验证了低层行为先验可以减少无效动作，但``多动''不等于会解 Sokoban，它应被理解为加速早期探索的行为先验，而非与任务完成直接相关的正向信号。
+\subsection{动作不合法惩罚}
+作为行为先验的辅助分析，我们考察了无用动作惩罚项（3.2节）。图 \ref{fig:useless}结果显示，该惩罚确实降低了 useless-action rate，并提高了 agent 的移动次数，说明奖励项改变了底层行为分布，使 agent 从``不动/浪费动作''转向更多行动。但其成功率与箱子到位率没有超过 \code{v1-nodl-nopush}，长程潜力反而较弱。这说明限制性能的主要因素并不是``没有合理动作''或``动作不够活跃''，而是推箱方向选择、长期规划与避免不可逆的错误 push。因此，无用动作惩罚验证了低层行为先验可以减少无效动作，但``多动''不等于会解 Sokoban，它应被理解为加速早期探索的行为先验，而非与任务完成直接相关的正向信号。
 
 \section{结论与启发}
 综合现有材料，我们得到以下结论：
 \begin{enumerate}[leftmargin=1.4em,itemsep=0.25em]
-    \item 主结果：HAPPO 在 7x7、2 boxes 下可以稳定学到协作策略；保留正向势函数、去掉 deadlock 与 pushability 负项的 \code{v1-nodl-nopush} 是当前实现中最稳的 baseline。
+    \item 主结果：HAPPO 在 7x7、2 boxes 下可以稳定学到协作策略；保留正向势函数、去掉 deadlock 与 pushability 负项的 \code{v1-nodl-nopush} 是当前实现中较稳的主线。
     \item 距离语义：更符合推箱语义的 reverse-push v2 并未带来更高成功率，更精确的 reward 反而使优化更崎岖；不可达距离的 cap 对控制信号尺度十分关键。
-    \item 模型架构：GRU 表现最好，显式动作历史会降低 GRU 性能，\code{mlp-8} 也劣于 \code{gru-8}；历史输入虽能在原理上把环境 Markov 化，但``可表示''不等于``易优化''，CNN 在 7x7 不占优。
+    \item 模型架构：GRU 表现最好，显式动作历史会降低 GRU 性能，\code{mlp-8} 也劣于 \code{gru-8}；显式动作输入不会使得模型能力上升；CNN 在 7x7 不占优。
     \item 信用分配：turn-based active mask 是必要基础，但当前 actor-side credit 收益有限。
     \item HAHyPO：引入 GRPO-style 优势没有提升性能，其轨迹级相对排序信号过粗，难以替代逐步 advantage；可作为探索性方向保留，不构成主线改进。
-    \item Mix：13x13 random padding 几乎无法训练，top-left padding 虽仍困难但 CNN 明显最优，体现了空间归纳偏置与平移不变性的价值；distillation 受限于模型容量而未见效果。若追求泛化，应优先使用更强空间归纳偏置与课程学习，而不是单点调 reward。
+    \item Mix：13x13 random padding 几乎无法训练，top-left padding 虽仍困难但 CNN 明显最优，体现了空间归纳偏置与平移不变性的价值；distillation 受限于模型容量而未见效果。若追求泛化，应优先使用CNN与课程学习，而不是单点调 reward。
+    \item 动作不合法惩罚：施加惩罚后没有明显优势，表明限制模型能力的是问题的复杂性而非动作的多样性，该惩罚项只能加速初始探索有效性但无法提供导向结果的正向信号。
 \end{enumerate}
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=\columnwidth]{figures/18_v1_useless_action_25m.png}
+\caption{illegal action punishment的消融实验。当惩罚权重非零时，智能体的行动率更高，与惩罚强度正相关；但施加惩罚后成功率没有明显超过 \code{v1-nodl-nopush}，后期朴素\code{v1-nodl-nopush}反倒更具潜力。}
+\label{fig:useless}
+\end{figure}
+
 
 \section{复现说明}
 第一次配置环境可运行：
@@ -430,7 +439,22 @@ bash run15/run_general15.1_top_left13_curriculum_all.sh
     \item 选用理由：\code{GRU0} 在 7x7 主线中整体更稳，且不引入动作历史带来的额外优化负担，这与正文模型架构结论一致。
 \end{itemize}
 
-评测指标方面，\code{GRU0} 在约 40M steps 后的最后一次 raw evaluation 中达到 eval success rate $=1.00$、box completion ratio $=1.00$；报告图像经过 smoothing，视觉上可能低于该 raw 点，最近 10 次 evaluation 的平均 success rate 约 0.72、box completion ratio 约 0.81。最终 checkpoint 整理在仓库根目录 \path{finalmodel/} 下（含 \code{models/}、\code{config.json} 与独立脚本 \code{eval_finalmodel.py}）；运行该脚本即可在 v0 环境复测，加 \code{--scenario_pool config} 则做 v0/v1/v2 混合 deterministic 评测（一次 30-episode mixed re-eval 的 overall success rate 为 0.60、box completion ratio 为 0.75）。引用时需写清 v0-only 或 mixed-scenario 口径。
+评测指标方面，\code{GRU0} 在约 40M steps 后的最后一次 raw evaluation 中达到 eval success rate $=1.00$、box completion ratio $=1.00$；报告图像经过 smoothing，视觉上可能低于该 raw 点，最近 10 次 evaluation 的平均 success rate 约 0.72、box completion ratio 约 0.81。最终 checkpoint 整理在仓库根目录 \path{finalmodel/} 下（含 \code{models/}、\code{config.json} 与独立脚本 \code{eval_finalmodel.py}）；运行该脚本即可在 v0 环境复测，加 \code{--scenario_pool config} 则做 v0/v1/v2 混合 deterministic 评测（一次 30-episode mixed re-eval 的 overall success rate 为 0.60、box completion ratio 为 0.75）。引用时需写清 v0-only 或 mixed-scenario 口径。示例：
+\begin{lstlisting}[language=bash]
+/home/ybshi/miniconda3/envs/harl-sokoban/bin/python finalmodel/eval_finalmodel.py \
+  --episodes 100 \
+  --device cuda \
+  --seed 50000
+
+# 或
+.
+/home/ybshi/miniconda3/envs/harl-sokoban/bin/python finalmodel/eval_finalmodel.py \
+  --episodes 30 \
+  --device cpu \
+  --seed 50000 \
+  --scenario_pool config \
+  --output-json finalmodel/eval_mixed_30ep_seed50000_metrics.json
+\end{lstlisting}
 
 \section*{致谢}
 本项目基于 \code{gym-sokoban} 环境和 PKU-MARL HARL 框架实现，课程作业要求提供了 HAPPO 等多智能体强化学习基准方向。

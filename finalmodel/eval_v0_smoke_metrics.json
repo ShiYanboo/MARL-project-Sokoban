@@ -1,0 +1,137 @@
+{
+  "model_dir": "/data1/ybshi/MARL-sokoban/finalmodel",
+  "scenario": "TwoPlayer-Sokoban-v0",
+  "episodes": 5,
+  "seed": 10001,
+  "deterministic": true,
+  "device": "cpu",
+  "aggregate": {
+    "episode_reward": {
+      "mean": -6.699999999999977,
+      "std": 14.072526425628046,
+      "min": -15.099999999999977,
+      "max": 21.4
+    },
+    "episode_base_reward": {
+      "mean": -7.299999999999971,
+      "std": 13.905394636614943,
+      "min": -14.999999999999963,
+      "max": 20.5
+    },
+    "episode_shaping_reward": {
+      "mean": 0.5999999999999999,
+      "std": 0.5059644256269407,
+      "min": -0.1,
+      "max": 1.2
+    },
+    "success": {
+      "mean": 0.2,
+      "std": 0.4,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "final_boxes_on_target": {
+      "mean": 1.0,
+      "std": 0.6324555320336759,
+      "min": 0.0,
+      "max": 2.0
+    },
+    "box_completion_ratio": {
+      "mean": 0.5,
+      "std": 0.31622776601683794,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "box_pushes": {
+      "mean": 4.0,
+      "std": 1.6733200530681511,
+      "min": 2.0,
+      "max": 6.0
+    },
+    "player_moves": {
+      "mean": 43.8,
+      "std": 26.102873405048726,
+      "min": 14.0,
+      "max": 77.0
+    },
+    "noop_rate": {
+      "mean": 0.009333333333333334,
+      "std": 0.015549205052920803,
+      "min": 0.0,
+      "max": 0.04
+    },
+    "episode_length": {
+      "mean": 123.0,
+      "std": 54.0,
+      "min": 15.0,
+      "max": 150.0
+    }
+  },
+  "episode_rows": [
+    {
+      "episode": 1,
+      "episode_reward": -15.099999999999977,
+      "episode_base_reward": -14.999999999999963,
+      "episode_shaping_reward": -0.1,
+      "success": 0.0,
+      "final_boxes_on_target": 0.0,
+      "box_completion_ratio": 0.0,
+      "box_pushes": 6.0,
+      "player_moves": 68.0,
+      "noop_rate": 0.04,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 2,
+      "episode_reward": -13.099999999999973,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.8999999999999999,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 2.0,
+      "player_moves": 45.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 3,
+      "episode_reward": -13.899999999999967,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.1,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 2.0,
+      "player_moves": 77.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 4,
+      "episode_reward": -12.79999999999997,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 1.2,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 5.0,
+      "player_moves": 14.0,
+      "noop_rate": 0.006666666666666667,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 5,
+      "episode_reward": 21.4,
+      "episode_base_reward": 20.5,
+      "episode_shaping_reward": 0.9,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 5.0,
+      "player_moves": 15.0,
+      "noop_rate": 0.0,
+      "episode_length": 15.0
+    }
+  ]
+}

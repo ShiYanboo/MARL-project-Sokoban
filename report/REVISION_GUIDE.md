@@ -274,6 +274,37 @@
 
 最终 GRU0 的 eval 成功率、箱子到位率及其 raw/smoothed 口径说明已经记录在同目录下的 `finalgru.md`。填写“最优模型”章节时，以该文件中的 final raw evaluation 指标为准，并说明报告图像经过 smoothing，视觉上可能低于最后一次 raw eval 点。
 
+最终模型 checkpoint 已单独整理在仓库根目录的 `finalmodel/` 下。该目录包含 `models/`、`config.json` 和独立评测脚本 `eval_finalmodel.py`。如需在 v0 环境上复测最终模型，可运行：
+
+```bash
+/home/ybshi/miniconda3/envs/harl-sokoban/bin/python finalmodel/eval_finalmodel.py \
+  --episodes 100 \
+  --device cuda \
+  --seed 50000
+```
+
+如果需要复现训练配置中的 v0/v1/v2 多环境平均评测，可使用 config 中保存的 scenario pool：
+
+```bash
+/home/ybshi/miniconda3/envs/harl-sokoban/bin/python finalmodel/eval_finalmodel.py \
+  --episodes 90 \
+  --device cuda \
+  --seed 50000 \
+  --scenario_pool config
+```
+
+脚本会同时输出 overall 指标和 per-scenario 指标。当前已有一次 30-episode mixed re-evaluation 结果保存在 `finalmodel/eval_mixed_30ep_seed50000_metrics.json`，overall success rate 为 `0.6000`，overall box completion ratio 为 `0.7500`。
+
+快速 smoke test 可运行：
+
+```bash
+/home/ybshi/miniconda3/envs/harl-sokoban/bin/python finalmodel/eval_finalmodel.py \
+  --episodes 5 \
+  --device cpu
+```
+
+说明：不加 `--scenario_pool` 时，该脚本执行的是 `TwoPlayer-Sokoban-v0` 上的独立 deterministic evaluation；加 `--scenario_pool config` 时，它执行的是 v0/v1/v2 混合 deterministic evaluation。若报告中引用此脚本结果，需要写清楚 v0-only 或 mixed-scenario 的具体口径。
+
 ## 5. 图注修改规则
 
 所有 `figure` caption 都需要按同一风格重写。

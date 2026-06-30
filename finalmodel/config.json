@@ -1,0 +1,122 @@
+{
+    "algo_args":	{
+        "algo":	{
+            "action_aggregation":	"prod",
+            "actor_num_mini_batch":	1,
+            "clip_param":	0.1,
+            "critic_epoch":	5,
+            "critic_num_mini_batch":	1,
+            "entropy_coef":	0.01,
+            "fixed_order":	false,
+            "gae_lambda":	0.95,
+            "gamma":	0.99,
+            "huber_delta":	10.0,
+            "max_grad_norm":	10.0,
+            "ppo_epoch":	5,
+            "share_param":	false,
+            "use_clipped_value_loss":	true,
+            "use_gae":	true,
+            "use_huber_loss":	true,
+            "use_max_grad_norm":	true,
+            "use_policy_active_masks":	true,
+            "value_loss_coef":	1
+        },
+        "device":	{
+            "cuda":	true,
+            "cuda_deterministic":	true,
+            "torch_threads":	4
+        },
+        "eval":	{
+            "eval_episodes":	20,
+            "n_eval_rollout_threads":	16,
+            "use_eval":	true
+        },
+        "logger":	{
+            "log_dir":	"./results"
+        },
+        "model":	{
+            "activation_func":	"relu",
+            "cnn_architecture":	"legacy",
+            "cnn_channels":	[
+                32,
+                64,
+                64
+            ],
+            "cnn_input_scale":	255.0,
+            "critic_lr":	0.0003,
+            "data_chunk_length":	25,
+            "gain":	0.01,
+            "hidden_sizes":	[
+                512,
+                512
+            ],
+            "initialization_method":	"orthogonal_",
+            "lr":	0.0001,
+            "opti_eps":	1e-05,
+            "recurrent_n":	1,
+            "std_x_coef":	1,
+            "std_y_coef":	0.5,
+            "use_feature_normalization":	true,
+            "use_naive_recurrent_policy":	false,
+            "use_recurrent_policy":	true,
+            "weight_decay":	0
+        },
+        "render":	{
+            "render_episodes":	10,
+            "use_render":	false
+        },
+        "seed":	{
+            "seed":	1,
+            "seed_specify":	true
+        },
+        "train":	{
+            "episode_length":	150,
+            "eval_interval":	50,
+            "log_interval":	5,
+            "model_dir":	"results/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r3/sokoban/TwoPlayer-Sokoban-v0/happo/happo_turn_based_bfs_nodl_nopush_gru_nohist_mixv012_r3/happo-rnn-bfs-nodl-nopush-nohist-mixv012-r3-steps5000000-len150-env5-lr1e-4-vlr3e-4-ppoepoch5-clip0.1-evalepi20-seed1-2026-06-28-15-06-46/models",
+            "n_rollout_threads":	32,
+            "num_env_steps":	5000000,
+            "use_linear_lr_decay":	true,
+            "use_proper_time_limits":	true,
+            "use_valuenorm":	true
+        }
+    },
+    "env_args":	{
+        "action_history_len":	0,
+        "actor_credit_coef":	0.0,
+        "actor_credit_mode":	"none",
+        "agent_box_distance_mode":	"adjacent",
+        "agent_box_distance_shaping_weight":	0.1,
+        "box_target_distance_mode":	"bfs",
+        "conflict_resolution":	"round_robin",
+        "control_mode":	"turn_based",
+        "deadlock_penalty":	0.0,
+        "deadlock_penalty_mode":	"increase",
+        "dim_room":	7,
+        "distance_shaping_weight":	0.2,
+        "max_steps":	150,
+        "mixed_obs_padding_mode":	"top_left",
+        "num_boxes":	2,
+        "num_gen_steps":	null,
+        "obs_dim_room":	null,
+        "observation_type":	"vector",
+        "pushability_shaping_weight":	0.0,
+        "reset_retry_limit":	20,
+        "reward_finished":	20,
+        "reward_scale":	1.0,
+        "scenario":	"TwoPlayer-Sokoban-v0",
+        "scenario_pool":	"TwoPlayer-Sokoban-v0,TwoPlayer-Sokoban-v1,TwoPlayer-Sokoban-v2",
+        "shaping_unreachable_distance":	null,
+        "state_type":	"EP",
+        "use_mixed_obs_padding":	false,
+        "use_reward_shaping":	true,
+        "useful_push_shaping_weight":	0.0
+    },
+    "main_args":	{
+        "algo":	"happo",
+        "env":	"sokoban",
+        "exp_name":	"happo_turn_based_bfs_nodl_nopush_gru_nohist_mixv012_r4",
+        "load_config":	"",
+        "run_name_prefix":	"happo-rnn-bfs-nodl-nopush-nohist-mixv012-r4"
+    }
+}

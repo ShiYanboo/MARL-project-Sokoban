@@ -1,0 +1,681 @@
+{
+  "model_dir": "/data1/ybshi/MARL-sokoban/finalmodel",
+  "scenario": "TwoPlayer-Sokoban-v0",
+  "scenario_pool": "TwoPlayer-Sokoban-v0,TwoPlayer-Sokoban-v1,TwoPlayer-Sokoban-v2",
+  "episodes": 30,
+  "seed": 50000,
+  "deterministic": true,
+  "device": "cpu",
+  "aggregate": {
+    "episode_reward": {
+      "mean": 7.396666666666678,
+      "std": 17.256447748273352,
+      "min": -14.999999999999963,
+      "max": 22.499999999999996
+    },
+    "episode_base_reward": {
+      "mean": 6.7066666666666785,
+      "std": 17.122148099918856,
+      "min": -14.999999999999963,
+      "max": 21.7
+    },
+    "episode_shaping_reward": {
+      "mean": 0.69,
+      "std": 0.3428799595582493,
+      "min": -0.09999999999999998,
+      "max": 1.4000000000000001
+    },
+    "success": {
+      "mean": 0.6,
+      "std": 0.48989794855663565,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "final_boxes_on_target": {
+      "mean": 1.5,
+      "std": 0.6708203932499369,
+      "min": 0.0,
+      "max": 2.0
+    },
+    "box_completion_ratio": {
+      "mean": 0.75,
+      "std": 0.33541019662496846,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "box_pushes": {
+      "mean": 3.966666666666667,
+      "std": 1.6629959577688562,
+      "min": 1.0,
+      "max": 7.0
+    },
+    "player_moves": {
+      "mean": 28.933333333333334,
+      "std": 32.61179064217249,
+      "min": 3.0,
+      "max": 133.0
+    },
+    "noop_rate": {
+      "mean": 0.027976608187134502,
+      "std": 0.07884359304614841,
+      "min": 0.0,
+      "max": 0.3333333333333333
+    },
+    "episode_length": {
+      "mean": 67.93333333333334,
+      "std": 67.23438273846368,
+      "min": 3.0,
+      "max": 150.0
+    }
+  },
+  "aggregate_by_scenario": {
+    "TwoPlayer-Sokoban-v2": {
+      "episode_reward": {
+        "mean": 7.440000000000012,
+        "std": 17.392021159140747,
+        "min": -14.999999999999963,
+        "max": 22.0
+      },
+      "episode_base_reward": {
+        "mean": 6.770000000000012,
+        "std": 17.169394281686216,
+        "min": -14.999999999999963,
+        "max": 21.7
+      },
+      "episode_shaping_reward": {
+        "mean": 0.67,
+        "std": 0.4382921400162225,
+        "min": -0.09999999999999998,
+        "max": 1.2
+      },
+      "success": {
+        "mean": 0.6,
+        "std": 0.48989794855663565,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "final_boxes_on_target": {
+        "mean": 1.5,
+        "std": 0.6708203932499369,
+        "min": 0.0,
+        "max": 2.0
+      },
+      "box_completion_ratio": {
+        "mean": 0.75,
+        "std": 0.33541019662496846,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "box_pushes": {
+        "mean": 3.7,
+        "std": 1.6155494421403511,
+        "min": 1.0,
+        "max": 6.0
+      },
+      "player_moves": {
+        "mean": 21.9,
+        "std": 24.018534509832193,
+        "min": 3.0,
+        "max": 81.0
+      },
+      "noop_rate": {
+        "mean": 0.06459649122807018,
+        "std": 0.11821764987675179,
+        "min": 0.0,
+        "max": 0.3333333333333333
+      },
+      "episode_length": {
+        "mean": 67.3,
+        "std": 67.63734175734584,
+        "min": 3.0,
+        "max": 150.0
+      }
+    },
+    "TwoPlayer-Sokoban-v0": {
+      "episode_reward": {
+        "mean": 4.020000000000015,
+        "std": 17.807683734837596,
+        "min": -14.399999999999974,
+        "max": 22.499999999999996
+      },
+      "episode_base_reward": {
+        "mean": 3.2500000000000178,
+        "std": 17.658666427564665,
+        "min": -14.999999999999963,
+        "max": 21.5
+      },
+      "episode_shaping_reward": {
+        "mean": 0.77,
+        "std": 0.24919871588754222,
+        "min": 0.5,
+        "max": 1.2000000000000002
+      },
+      "success": {
+        "mean": 0.5,
+        "std": 0.5,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "final_boxes_on_target": {
+        "mean": 1.3,
+        "std": 0.7810249675906654,
+        "min": 0.0,
+        "max": 2.0
+      },
+      "box_completion_ratio": {
+        "mean": 0.65,
+        "std": 0.3905124837953327,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "box_pushes": {
+        "mean": 4.1,
+        "std": 1.3,
+        "min": 2.0,
+        "max": 6.0
+      },
+      "player_moves": {
+        "mean": 40.1,
+        "std": 31.888712736640844,
+        "min": 4.0,
+        "max": 86.0
+      },
+      "noop_rate": {
+        "mean": 0.016666666666666666,
+        "std": 0.049999999999999996,
+        "min": 0.0,
+        "max": 0.16666666666666666
+      },
+      "episode_length": {
+        "mean": 80.5,
+        "std": 69.63368437760565,
+        "min": 5.0,
+        "max": 150.0
+      }
+    },
+    "TwoPlayer-Sokoban-v1": {
+      "episode_reward": {
+        "mean": 10.730000000000008,
+        "std": 15.850681373366873,
+        "min": -13.599999999999973,
+        "max": 22.0
+      },
+      "episode_base_reward": {
+        "mean": 10.100000000000009,
+        "std": 15.793036440152965,
+        "min": -13.999999999999966,
+        "max": 21.7
+      },
+      "episode_shaping_reward": {
+        "mean": 0.6300000000000001,
+        "std": 0.29681644159311665,
+        "min": 0.30000000000000004,
+        "max": 1.4000000000000001
+      },
+      "success": {
+        "mean": 0.7,
+        "std": 0.45825756949558394,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "final_boxes_on_target": {
+        "mean": 1.7,
+        "std": 0.45825756949558394,
+        "min": 1.0,
+        "max": 2.0
+      },
+      "box_completion_ratio": {
+        "mean": 0.85,
+        "std": 0.22912878474779197,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "box_pushes": {
+        "mean": 4.1,
+        "std": 1.972308292331602,
+        "min": 1.0,
+        "max": 7.0
+      },
+      "player_moves": {
+        "mean": 24.8,
+        "std": 37.49079887118972,
+        "min": 3.0,
+        "max": 133.0
+      },
+      "noop_rate": {
+        "mean": 0.002666666666666667,
+        "std": 0.008,
+        "min": 0.0,
+        "max": 0.02666666666666667
+      },
+      "episode_length": {
+        "mean": 56.0,
+        "std": 61.94352266379432,
+        "min": 3.0,
+        "max": 150.0
+      }
+    }
+  },
+  "episode_rows": [
+    {
+      "episode": 1,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": -13.399999999999968,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.6000000000000001,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 2.0,
+      "player_moves": 44.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 2,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": 22.499999999999996,
+      "episode_base_reward": 21.4,
+      "episode_shaping_reward": 1.0999999999999999,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 5.0,
+      "player_moves": 6.0,
+      "noop_rate": 0.0,
+      "episode_length": 6.0
+    },
+    {
+      "episode": 3,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": 19.9,
+      "episode_base_reward": 19.5,
+      "episode_shaping_reward": 0.4,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 4.0,
+      "player_moves": 12.0,
+      "noop_rate": 0.0,
+      "episode_length": 25.0
+    },
+    {
+      "episode": 4,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": 21.299999999999997,
+      "episode_base_reward": 20.099999999999998,
+      "episode_shaping_reward": 1.2,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 6.0,
+      "player_moves": 12.0,
+      "noop_rate": 0.05263157894736842,
+      "episode_length": 19.0
+    },
+    {
+      "episode": 5,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": 21.2,
+      "episode_base_reward": 20.5,
+      "episode_shaping_reward": 0.7,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 5.0,
+      "player_moves": 15.0,
+      "noop_rate": 0.0,
+      "episode_length": 15.0
+    },
+    {
+      "episode": 6,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": 21.7,
+      "episode_base_reward": 21.099999999999998,
+      "episode_shaping_reward": 0.6000000000000001,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 3.0,
+      "player_moves": 7.0,
+      "noop_rate": 0.0,
+      "episode_length": 9.0
+    },
+    {
+      "episode": 7,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": 21.4,
+      "episode_base_reward": 20.599999999999998,
+      "episode_shaping_reward": 0.7999999999999999,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 4.0,
+      "player_moves": 9.0,
+      "noop_rate": 0.0,
+      "episode_length": 14.0
+    },
+    {
+      "episode": 8,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": 22.299999999999997,
+      "episode_base_reward": 21.2,
+      "episode_shaping_reward": 1.0999999999999999,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 5.0,
+      "player_moves": 8.0,
+      "noop_rate": 0.0,
+      "episode_length": 8.0
+    },
+    {
+      "episode": 9,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": -13.499999999999968,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.5,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 1.0,
+      "player_moves": 42.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 10,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": 21.3,
+      "episode_base_reward": 20.5,
+      "episode_shaping_reward": 0.8,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 4.0,
+      "player_moves": 10.0,
+      "noop_rate": 0.3333333333333333,
+      "episode_length": 15.0
+    },
+    {
+      "episode": 11,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": -14.399999999999974,
+      "episode_base_reward": -14.999999999999963,
+      "episode_shaping_reward": 0.6,
+      "success": 0.0,
+      "final_boxes_on_target": 0.0,
+      "box_completion_ratio": 0.0,
+      "box_pushes": 2.0,
+      "player_moves": 78.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 12,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": -13.299999999999969,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.7000000000000002,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 3.0,
+      "player_moves": 9.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 13,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": -14.999999999999963,
+      "episode_base_reward": -14.999999999999963,
+      "episode_shaping_reward": 0.0,
+      "success": 0.0,
+      "final_boxes_on_target": 0.0,
+      "box_completion_ratio": 0.0,
+      "box_pushes": 3.0,
+      "player_moves": 40.0,
+      "noop_rate": 0.26,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 14,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": -13.399999999999968,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.6000000000000001,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 4.0,
+      "player_moves": 86.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 15,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": 21.599999999999998,
+      "episode_base_reward": 21.099999999999998,
+      "episode_shaping_reward": 0.5,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 5.0,
+      "player_moves": 8.0,
+      "noop_rate": 0.0,
+      "episode_length": 9.0
+    },
+    {
+      "episode": 16,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": 22.0,
+      "episode_base_reward": 21.7,
+      "episode_shaping_reward": 0.30000000000000004,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 2.0,
+      "player_moves": 3.0,
+      "noop_rate": 0.0,
+      "episode_length": 3.0
+    },
+    {
+      "episode": 17,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": 22.0,
+      "episode_base_reward": 21.5,
+      "episode_shaping_reward": 0.5,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 2.0,
+      "player_moves": 4.0,
+      "noop_rate": 0.0,
+      "episode_length": 5.0
+    },
+    {
+      "episode": 18,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": 21.099999999999998,
+      "episode_base_reward": 20.299999999999997,
+      "episode_shaping_reward": 0.8,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 6.0,
+      "player_moves": 9.0,
+      "noop_rate": 0.0,
+      "episode_length": 17.0
+    },
+    {
+      "episode": 19,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": -14.099999999999966,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": -0.09999999999999998,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 1.0,
+      "player_moves": 6.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 20,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": -14.299999999999974,
+      "episode_base_reward": -14.999999999999963,
+      "episode_shaping_reward": 0.7000000000000001,
+      "success": 0.0,
+      "final_boxes_on_target": 0.0,
+      "box_completion_ratio": 0.0,
+      "box_pushes": 4.0,
+      "player_moves": 75.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 21,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": -13.599999999999973,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.4,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 7.0,
+      "player_moves": 133.0,
+      "noop_rate": 0.02666666666666667,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 22,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": -12.89999999999997,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 1.1,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 6.0,
+      "player_moves": 81.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 23,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": 21.099999999999998,
+      "episode_base_reward": 19.9,
+      "episode_shaping_reward": 1.2000000000000002,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 5.0,
+      "player_moves": 17.0,
+      "noop_rate": 0.0,
+      "episode_length": 21.0
+    },
+    {
+      "episode": 24,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": 20.8,
+      "episode_base_reward": 20.099999999999998,
+      "episode_shaping_reward": 0.7000000000000001,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 3.0,
+      "player_moves": 10.0,
+      "noop_rate": 0.0,
+      "episode_length": 19.0
+    },
+    {
+      "episode": 25,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": 21.799999999999997,
+      "episode_base_reward": 20.7,
+      "episode_shaping_reward": 1.0999999999999999,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 5.0,
+      "player_moves": 7.0,
+      "noop_rate": 0.0,
+      "episode_length": 13.0
+    },
+    {
+      "episode": 26,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": -13.499999999999973,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.5000000000000001,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 6.0,
+      "player_moves": 67.0,
+      "noop_rate": 0.0,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 27,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": 20.599999999999998,
+      "episode_base_reward": 19.2,
+      "episode_shaping_reward": 1.4000000000000001,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 7.0,
+      "player_moves": 15.0,
+      "noop_rate": 0.0,
+      "episode_length": 28.0
+    },
+    {
+      "episode": 28,
+      "scenario": "TwoPlayer-Sokoban-v2",
+      "episode_reward": 22.0,
+      "episode_base_reward": 21.099999999999998,
+      "episode_shaping_reward": 0.9,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 4.0,
+      "player_moves": 7.0,
+      "noop_rate": 0.0,
+      "episode_length": 9.0
+    },
+    {
+      "episode": 29,
+      "scenario": "TwoPlayer-Sokoban-v0",
+      "episode_reward": -13.29999999999997,
+      "episode_base_reward": -13.999999999999966,
+      "episode_shaping_reward": 0.7000000000000002,
+      "success": 0.0,
+      "final_boxes_on_target": 1.0,
+      "box_completion_ratio": 0.5,
+      "box_pushes": 3.0,
+      "player_moves": 45.0,
+      "noop_rate": 0.16666666666666666,
+      "episode_length": 150.0
+    },
+    {
+      "episode": 30,
+      "scenario": "TwoPlayer-Sokoban-v1",
+      "episode_reward": 22.0,
+      "episode_base_reward": 21.7,
+      "episode_shaping_reward": 0.30000000000000004,
+      "success": 1.0,
+      "final_boxes_on_target": 2.0,
+      "box_completion_ratio": 1.0,
+      "box_pushes": 2.0,
+      "player_moves": 3.0,
+      "noop_rate": 0.0,
+      "episode_length": 3.0
+    }
+  ]
+}

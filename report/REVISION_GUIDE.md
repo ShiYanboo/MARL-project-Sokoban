@@ -221,18 +221,24 @@
 
 #### 4.4.7 无用动作惩罚项
 
-这一小节当前先不要写出结论。
+这一小节可以作为辅助分析写入，但不要写成主线改进。
 
-可接受的处理方式：
+核心结论固定为：
 
-- 保留标题但正文留空或只写一句“结果暂不充分”
-- 或直接不单独展开
+- 无用动作惩罚项的作用主要是加速早期行为探索，而不是提供与任务完成直接相关的正向信号。
+- 结果显示，该惩罚确实降低了 useless-action rate，并提高了 agent 的移动次数；这说明奖励项改变了底层行为分布，使 agent 从“不动 / 浪费动作”转向“更多行动”。
+- 但成功率与箱子到位率没有超过 `v1-nodl-nopush`，长程潜力反而较弱。这说明限制性能的主要因素并不是“没有合理动作”或“动作不够活跃”，而是推箱方向选择、长期规划和避免错误 push。
+- 因此，该实验应解释为：无用动作惩罚验证了低层行为先验可以减少无效动作，但多动不等于会解 Sokoban。
+
+推荐写法：
+
+> Useless-action penalty effectively reduces invalid or semantically useless behaviors and increases agent movement, especially with larger penalty weights. However, this improvement in activity does not translate into higher success rate. The result suggests that early exploration is not primarily limited by the absence of reasonable primitive actions; rather, the bottleneck lies in choosing useful push directions and avoiding irreversible bad box placements.
 
 不可接受的处理方式：
 
-- 编结论
-- 强行解释尚未收敛的实验
-- 为了完整性硬塞主图
+- 把它写成比 `v1-nodl-nopush` 更好的方法。
+- 只根据初期短暂领先得出“最终性能提升”的结论。
+- 把 useless-action penalty 解释成提供了明确的 task-progress 正向奖励。
 
 ### 4.5 结论与启发
 
@@ -347,7 +353,7 @@
 5.4 Credit assignment  
 5.5 HAHyPO  
 5.6 Mix  
-5.7 无用动作惩罚项（可留空或略写）
+5.7 无用动作惩罚项（作为行为先验辅助分析略写）
 5. `6 结论与启发`
 6. `7 复现说明`
 7. `8 最优模型`
@@ -365,7 +371,7 @@
 - 所有 `figure` captions 都已改写，但图位置基本未动。
 - 后半部分不再出现“伪 mix / pseudo-mix / 伪混合”。
 - 结果分析严格按 6 个大块组织：主结果、距离语义、模型架构、credit、HAHyPO、mix。
-- 无用动作惩罚项没有被写成伪结论。
+- 无用动作惩罚项只被写成行为先验 / 早期探索分析，而不是主线性能提升。
 - `runX` 信息被压缩到必要最少。
 - 新增了“最优模型”章节，但仍为占位模板。
 - 全文语气与前半部分一致，简练、书面、结论导向。

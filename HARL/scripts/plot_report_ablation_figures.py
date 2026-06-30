@@ -33,6 +33,19 @@ def seg(prefix, offset, contains=None):
     return {"prefix": prefix, "offset": offset, "contains": contains}
 
 
+def long_chain(prefix):
+    return [
+        seg(prefix, 0),
+        seg(f"{prefix}-resume10m", 5 * M),
+        seg(f"{prefix}-resume15m", 10 * M),
+        seg(f"{prefix}-resume20m", 15 * M),
+        seg(f"{prefix}-mixv012-r1", 20 * M),
+        seg(f"{prefix}-mixv012-r2", 25 * M),
+        seg(f"{prefix}-mixv012-r3", 30 * M),
+        seg(f"{prefix}-mixv012-r4", 35 * M),
+    ]
+
+
 CHAINS = {
     "baseline": [
         seg("happo-baseline-original", 0),
@@ -195,6 +208,8 @@ CHAINS = {
     "credit-progress005": [seg("happo-credit-progress005", 0)],
     "credit-progress010": [seg("happo-credit-progress010", 0)],
     "credit-reward002": [seg("happo-credit-reward002", 0)],
+    "v1-useless-0.1": long_chain("happo-useless-p01-v1-nodl-nopush"),
+    "v1-useless-0.2": long_chain("happo-useless-p02-v1-nodl-nopush"),
 }
 
 
@@ -460,6 +475,23 @@ FIGURES = [
         "layout": (1, 1),
         "figsize": (14, 4.2),
         "max_step": 30 * M,
+        "boundary": 20 * M,
+    },
+    {
+        "filename": "18_v1_useless_action_25m.png",
+        "title": "V1 useless-action penalty ablation, first 25M steps",
+        "families": {
+            "v1": "v1-nodl-nopush",
+            "v1 useless 0.1": "v1-useless-0.1",
+            "v1 useless 0.2": "v1-useless-0.2",
+        },
+        "metrics": [
+            "sokoban/train_success_rate",
+            "sokoban/train_player_moves",
+        ],
+        "layout": (2, 1),
+        "figsize": (14, 7),
+        "max_step": 25 * M,
         "boundary": 20 * M,
     },
 ]

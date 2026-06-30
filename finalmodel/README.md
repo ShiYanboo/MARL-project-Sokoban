@@ -57,6 +57,27 @@ python finalmodel/eval_finalmodel.py \
   --device cpu
 ```
 
+## 图形化 Demo 演示
+
+在仓库根目录运行以下命令，可以一键启动最终模型的图形化推理演示：
+
+```bash
+./demo_finalmodel_gui.sh
+```
+
+该脚本会优先使用本机 `harl-sokoban` conda 环境，加载
+`finalmodel/models/actor_agent0.pt` 和 `finalmodel/models/actor_agent1.pt`，
+默认同时启动 9 个 `TwoPlayer-Sokoban` 场景，并以九宫格窗口展示推理过程。
+演示中每隔 1 秒执行一次 agent 动作，场景结束后会自动重置继续展示。
+
+常用参数：
+
+```bash
+./demo_finalmodel_gui.sh --device cpu
+./demo_finalmodel_gui.sh --interval 0.5
+./demo_finalmodel_gui.sh --headless --steps 10 --save-gif finalmodel/demo.gif
+```
+
 ## 补充复核结果
 
 ### `v0` 单场景复核
